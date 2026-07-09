@@ -9,6 +9,7 @@ import Library from './pages/Library';
 import ExerciseDetail from './pages/ExerciseDetail';
 import Settings from './pages/Settings';
 import Chat from './pages/Chat';
+import AnimTest from './pages/AnimTest';
 
 export default function App() {
   return (
@@ -23,6 +24,7 @@ export default function App() {
         <Route path="/library/:id" element={<ExerciseDetail />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/chat" element={<Chat />} />
+        <Route path="/animtest" element={<AnimTest />} />
         <Route path="*" element={<Home />} />
       </Routes>
       <Nav />
