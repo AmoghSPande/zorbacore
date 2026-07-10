@@ -60,7 +60,7 @@ export async function getProfile(): Promise<Profile> {
 
 export async function updateProfile(patch: Partial<Profile>): Promise<void> {
   const p = await getProfile();
-  await db.profile.put({ ...p, ...patch });
+  await db.profile.put({ ...p, ...patch, updatedAt: Date.now() });
 }
 
 // ---------- date helpers used everywhere ----------
