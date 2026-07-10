@@ -40,7 +40,7 @@ export const db = new HybridCoachDB();
 
 export const DEFAULT_PROFILE: Profile = {
   id: 'me',
-  name: 'Amogh',
+  name: '',
   trainingDaysPerWeek: 3,
   gymDays: [1, 5], // Mon, Fri gym; Wed run — adjustable in Settings
   runDays: [3],

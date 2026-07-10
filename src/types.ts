@@ -157,6 +157,11 @@ export interface Profile {
   targetWeightKg?: number;
   targetWaistCm?: number;
   targetBodyFatPct?: number;
+  /** health flags gathered at onboarding — drive coaching personalization */
+  kneeIssue?: boolean;
+  backIssue?: boolean;
+  conditionsNote?: string;
+  goalsNote?: string;
   equipment: EquipmentItem[];
   remindersEnabled: boolean;
   reminderTime: string; // "07:30"

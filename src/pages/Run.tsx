@@ -157,7 +157,7 @@ function LogRun({ onClose, stats }: { onClose: () => void; stats: RunStats | nul
           </div>
         </div>
         <div className="card">
-          <div className="card-title">Right-knee discomfort</div>
+          <div className="card-title">Knee discomfort</div>
           <Scale10 value={knee} onChange={setKnee} />
         </div>
         <div className="card">

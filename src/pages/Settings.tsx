@@ -166,6 +166,18 @@ export default function Settings() {
         <div className="tag-note" style={{ marginTop: 8 }}>
           Height unlocks the waist-to-height visceral-fat gauge; targets draw goal lines on Progress charts.
         </div>
+        <div className="divider" />
+        <div className="card-title">Health flags (personalize the coaching)</div>
+        <div className="chip-row" style={{ marginBottom: 10 }}>
+          <button className={`chip ${p.kneeIssue ? 'on' : ''}`} onClick={() => set({ kneeIssue: !p.kneeIssue })}>
+            {p.kneeIssue ? '✓ ' : ''}Knee issue
+          </button>
+          <button className={`chip ${p.backIssue ? 'on' : ''}`} onClick={() => set({ backIssue: !p.backIssue })}>
+            {p.backIssue ? '✓ ' : ''}Lower-back issue
+          </button>
+        </div>
+        <input className="input" placeholder="Other conditions (optional)"
+          value={p.conditionsNote ?? ''} onChange={(e) => set({ conditionsNote: e.target.value || undefined })} />
       </div>
 
       <div className="card">
