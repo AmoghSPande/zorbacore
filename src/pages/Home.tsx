@@ -7,6 +7,7 @@ import { computeDayStatus, type DayStatus } from '../lib/readiness';
 import { computeRunStats, fmtTime, type RunStats } from '../lib/running';
 import DailyCheckin from '../components/DailyCheckin';
 import { Sparkline, VIZ } from '../components/charts';
+import { dueNudge } from '../lib/notify';
 
 function ring(score: number): string {
   return score >= 72 ? 'var(--accent)' : score >= 48 ? 'var(--warn)' : 'var(--danger)';
@@ -24,6 +25,13 @@ export default function Home() {
   const [runStats, setRunStats] = useState<RunStats | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [showCheckin, setShowCheckin] = useState(false);
+  const [nudge, setNudge] = useState<string | null>(null);
+
+  useEffect(() => {
+    dueNudge().then(setNudge);
+    const iv = setInterval(() => dueNudge().then((n) => n && setNudge(n)), 5 * 60000);
+    return () => clearInterval(iv);
+  }, []);
 
   const checkins = useLiveQuery(() => db.checkins.toArray(), []);
   const workouts = useLiveQuery(() => db.workouts.toArray(), []);
@@ -54,6 +62,13 @@ export default function Home() {
           <Link to="/settings" className="icon-btn" aria-label="Settings">⚙️</Link>
         </div>
       </div>
+
+      {nudge && (
+        <div className="card pad-sm row-between" style={{ borderColor: 'var(--run)' }}>
+          <span style={{ fontSize: '0.88rem' }}>{nudge}</span>
+          <button className="icon-btn" style={{ width: 28, height: 28, flexShrink: 0 }} onClick={() => setNudge(null)}>✕</button>
+        </div>
+      )}
 
       {/* readiness */}
       {status?.readiness ? (
