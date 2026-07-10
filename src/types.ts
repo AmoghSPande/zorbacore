@@ -163,4 +163,5 @@ export interface Profile {
   anthropicApiKey?: string;
   onboarded: boolean;
   createdAt: number;
+  updatedAt?: number;
 }

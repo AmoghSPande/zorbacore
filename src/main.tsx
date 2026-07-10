@@ -4,7 +4,9 @@ import { HashRouter } from 'react-router-dom';
 import App from './App';
 import './styles.css';
 import { seedIfNeeded } from './data/seed';
+import { startCloud } from './lib/cloud';
 
+startCloud();
 seedIfNeeded().finally(() => {
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>

@@ -2,8 +2,86 @@ import { useEffect, useRef, useState } from 'react';
 import { db, exportAll, getProfile, importAll, updateProfile } from '../db';
 import type { Profile } from '../types';
 import { requestNotifyPermission } from '../lib/notify';
+import { cloudEnabled, signInGoogle, signOutGoogle, syncNow, useCloud } from '../lib/cloud';
 import { Stepper } from '../components/inputs';
 import BackLink from '../components/BackLink';
+
+function CloudCard() {
+  const cloud = useCloud();
+  const [err, setErr] = useState<string | null>(null);
+
+  if (!cloudEnabled) {
+    return (
+      <div className="card">
+        <div className="card-title">Account & cloud sync</div>
+        <p style={{ fontSize: '0.88rem' }}>
+          Google sign-in isn't set up yet. Once the Firebase project is connected
+          (see <b>docs/FIREBASE_SETUP.md</b> in the repo — a one-time, 5-minute step),
+          you and your family can each sign in with Google to get a private,
+          cross-device fitness diary.
+        </p>
+      </div>
+    );
+  }
+
+  const act = async (fn: () => Promise<void>) => {
+    setErr(null);
+    try { await fn(); } catch (e) { setErr((e as Error).message); }
+  };
+
+  return (
+    <div className="card">
+      <div className="card-title">Account & cloud sync</div>
+      {!cloud.user ? (
+        <>
+          <button className="btn primary big" disabled={!cloud.ready} onClick={() => act(signInGoogle)}>
+            Continue with Google
+          </button>
+          <div className="tag-note" style={{ marginTop: 8 }}>
+            Signing in backs up your diary to your own private cloud space and syncs it
+            across your devices. Only your Google account can access it — not other users,
+            not visitors to the site. Without signing in, everything stays on this device only.
+          </div>
+        </>
+      ) : (
+        <>
+          <div className="row-between" style={{ marginBottom: 8 }}>
+            <div>
+              <div style={{ fontWeight: 650, fontSize: '0.92rem' }}>{cloud.user.name ?? 'Signed in'}</div>
+              <div className="tag-note">{cloud.user.email}</div>
+            </div>
+            <span className="badge ok">private sync on</span>
+          </div>
+          {cloud.conflict && (
+            <div className="card pad-sm" style={{ borderColor: 'var(--warn)', marginBottom: 8 }}>
+              <div style={{ fontSize: '0.86rem', marginBottom: 8 }}>
+                This device has data from a different account. Which diary should win?
+              </div>
+              <div className="row">
+                <button className="btn sm grow" onClick={() => act(() => syncNow(cloud.user!.uid, 'useCloud'))}>
+                  Use my cloud data
+                </button>
+                <button className="btn sm grow" onClick={() => act(() => syncNow(cloud.user!.uid, 'useLocal'))}>
+                  Keep this device's data
+                </button>
+              </div>
+            </div>
+          )}
+          <div className="row">
+            <button className="btn grow" disabled={cloud.syncing} onClick={() => act(() => syncNow(cloud.user!.uid))}>
+              {cloud.syncing ? 'Syncing…' : 'Sync now'}
+            </button>
+            <button className="btn ghost" onClick={() => act(signOutGoogle)}>Sign out</button>
+          </div>
+          <div className="tag-note" style={{ marginTop: 8 }}>
+            {cloud.lastSyncAt ? `Last synced ${new Date(cloud.lastSyncAt).toLocaleString()}` : 'Not synced yet'} · syncs automatically while the app is open
+          </div>
+        </>
+      )}
+      {(err || cloud.error) && <div className="tag-note" style={{ color: 'var(--danger)', marginTop: 6 }}>{err ?? cloud.error}</div>}
+    </div>
+  );
+}
 
 export default function Settings() {
   const [p, setP] = useState<Profile | null>(null);
@@ -61,6 +139,8 @@ export default function Settings() {
         </div>
         <button className="btn sm primary" onClick={save}>{saved ? '✓ Saved' : 'Save'}</button>
       </div>
+
+      <CloudCard />
 
       <div className="card">
         <div className="card-title">Profile & targets</div>
@@ -188,7 +268,7 @@ export default function Settings() {
       </div>
 
       <div className="tag-note" style={{ textAlign: 'center' }}>
-        HybridCoach · your data never leaves this device (except AI chat, if enabled)
+        HybridCoach · your data stays on this device, plus your own private cloud space if you sign in
       </div>
     </div>
   );
