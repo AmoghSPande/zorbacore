@@ -156,7 +156,7 @@ label.field .lbl { display: block; font-size: 0.78rem; font-weight: 600; color: 
 /* 1-10 scale picker */
 .scale10 { display: grid; grid-template-columns: repeat(10, 1fr); gap: 4px; }
 .scale10 button {
-  aspect-ratio: 1; border-radius: 8px; font-weight: 700; font-size: 0.85rem;
+  height: 44px; border-radius: 8px; font-weight: 700; font-size: 0.85rem;
   background: var(--surface-2); border: 1px solid var(--border); color: var(--text-dim);
 }
 .scale10 button.sel { color: #06131f; }

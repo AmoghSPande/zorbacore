@@ -84,6 +84,11 @@ export default function MobilityPlayer({ routine, onClose }: { routine: Routine;
         {ex && ex.cues.length > 0 && (
           <div className="tag-note" style={{ textAlign: 'center' }}>{ex.cues[0]}</div>
         )}
+        {idx + 1 < routine.items.length && (
+          <div className="tag-note" style={{ textAlign: 'center', color: 'var(--text-faint)' }}>
+            Next: {exMap.get(routine.items[idx + 1].exerciseId)?.name ?? routine.items[idx + 1].exerciseId}
+          </div>
+        )}
 
         <div className="row">
           <button className="btn grow" onClick={() => setPaused(!paused)}>{paused ? 'Resume' : 'Pause'}</button>

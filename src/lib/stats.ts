@@ -55,7 +55,8 @@ export function suggestNext(last: LastPerf | null, repLow = 8, repHigh = 12): Su
     return { weightKg: topSet.weightKg, reps: topSet.reps, rationale: 'Last session was near max — repeat it and own the weight.' };
   }
   if (topSet.reps >= repHigh) {
-    const inc = topSet.weightKg >= 60 ? 5 : 2.5;
+    // conservative default: +2.5kg until the bar is genuinely heavy
+    const inc = topSet.weightKg >= 80 ? 5 : 2.5;
     return {
       weightKg: topSet.weightKg + inc,
       reps: repLow,
