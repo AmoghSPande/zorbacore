@@ -19,6 +19,22 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      # Ensures Pages is enabled with source = "GitHub Actions" (not branch-based)
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+      # Branch-based Pages drops the custom domain when no root CNAME exists;
+      # re-assert it so zorbacore.com stays bound to this site.
+      - name: Ensure custom domain
+        continue-on-error: true
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          curl -sS -X PUT \
+            -H "Authorization: Bearer $GH_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/${{ github.repository }}/pages" \
+            -d '{"cname":"zorbacore.com","build_type":"workflow"}'
       - uses: actions/setup-node@v4
         with:
           node-version: 22
