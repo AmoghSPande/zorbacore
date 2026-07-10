@@ -88,8 +88,16 @@ function StartScreen({ onStart }: { onStart: (t: WorkoutType) => void }) {
     () => db.workouts.orderBy('date').reverse().limit(5).toArray(),
     [],
   ) ?? [];
+  const exercises = useLiveQuery(() => db.exercises.toArray(), []) ?? [];
   const lastStrength = recent.find((w) => w.type === 'strength-core' || w.type === 'strength-conditioning');
   const suggested: WorkoutType = lastStrength?.type === 'strength-core' ? 'strength-conditioning' : 'strength-core';
+
+  const exMap = new Map(exercises.map((e) => [e.id, e.name]));
+  const preview = buildSession(suggested, { knee: 1, back: 1, energy: 8 })
+    .blocks.filter((b) => b.section === 'strength')
+    .map((b) => exMap.get(b.exerciseId))
+    .filter(Boolean)
+    .slice(0, 5);
 
   return (
     <div className="page">
@@ -103,6 +111,11 @@ function StartScreen({ onStart }: { onStart: (t: WorkoutType) => void }) {
       <button className="btn primary big" onClick={() => onStart(suggested)}>
         Start {suggested === 'strength-core' ? 'Day 1 · Strength + Core' : 'Day 3 · Strength + Conditioning'}
       </button>
+      {preview.length > 0 && (
+        <div className="tag-note" style={{ marginTop: -4, textAlign: 'center' }}>
+          {preview.join(' · ')}{preview.length >= 5 ? ' + core' : ''}
+        </div>
+      )}
       <div className="grid-2">
         <button className="btn" onClick={() => onStart(suggested === 'strength-core' ? 'strength-conditioning' : 'strength-core')}>
           {suggested === 'strength-core' ? 'Day 3 · Str + Cond' : 'Day 1 · Str + Core'}
@@ -214,7 +227,22 @@ function ActiveWorkout({
     await db.workouts.update(workoutId, {
       sets: [...workout.sets, { ...set, exerciseId: exId, at: Date.now() }],
     });
+    if (navigator.vibrate) navigator.vibrate(25);
     if (restSec > 0) setRestFor({ id: exId, seconds: restSec, key: Date.now() });
+
+    // auto-advance: when this exercise hits its planned sets, open the next unfinished one
+    const ordered = [
+      ...plan.blocks.map((b) => ({ id: b.exerciseId, target: b.sets })),
+      ...extraShown.map((id) => ({ id, target: 3 })),
+    ];
+    const counts = new Map<string, number>();
+    for (const s of workout.sets) counts.set(s.exerciseId, (counts.get(s.exerciseId) ?? 0) + 1);
+    counts.set(exId, (counts.get(exId) ?? 0) + 1);
+    const cur = ordered.find((o) => o.id === exId);
+    if (cur && (counts.get(exId) ?? 0) >= cur.target) {
+      const next = ordered.find((o) => o.id !== exId && (counts.get(o.id) ?? 0) < o.target);
+      if (next) setTimeout(() => setOpen(next.id), 1000);
+    }
   };
 
   const undoSet = async (exId: string) => {
@@ -276,7 +304,6 @@ function ActiveWorkout({
                     open={open === blk.exerciseId}
                     onToggle={() => setOpen(open === blk.exerciseId ? null : blk.exerciseId)}
                     onLog={logSet} onUndo={undoSet}
-                    rest={restFor?.id === blk.exerciseId ? restFor : null}
                     allExercises={exercises}
                   />
                 );
@@ -301,7 +328,6 @@ function ActiveWorkout({
                   open={open === id}
                   onToggle={() => setOpen(open === id ? null : id)}
                   onLog={logSet} onUndo={undoSet}
-                  rest={restFor?.id === id ? restFor : null}
                   allExercises={exercises}
                 />
               );
@@ -311,6 +337,22 @@ function ActiveWorkout({
       )}
 
       <button className="btn" onClick={() => setShowPicker(true)}>+ Add exercise</button>
+
+      {/* rest timer stays visible wherever you are in the session */}
+      {restFor && (
+        <div
+          className="card pad-sm"
+          style={{ position: 'sticky', bottom: 'calc(var(--nav-h) + var(--sab) + 10px)', zIndex: 40, boxShadow: '0 6px 22px rgba(0,0,0,0.45)' }}
+        >
+          <div className="row" style={{ gap: 10 }}>
+            <span className="tag-note" style={{ flexShrink: 0 }}>Rest</span>
+            <div className="grow">
+              <RestTimer key={restFor.key} seconds={restFor.seconds} onDone={() => setTimeout(() => setRestFor(null), 4000)} />
+            </div>
+            <button className="btn sm ghost" onClick={() => setRestFor(null)}>Skip</button>
+          </div>
+        </div>
+      )}
 
       {showPicker && (
         <ExercisePicker
@@ -326,7 +368,7 @@ function ActiveWorkout({
 // ---------------- per-exercise logging card ----------------
 
 function ExerciseCard({
-  ex, block, workout, sym, open, onToggle, onLog, onUndo, rest, allExercises,
+  ex, block, workout, sym, open, onToggle, onLog, onUndo, allExercises,
 }: {
   ex: Exercise;
   block: SessionPlan['blocks'][number];
@@ -336,7 +378,6 @@ function ExerciseCard({
   onToggle: () => void;
   onLog: (exId: string, set: Omit<SetLog, 'exerciseId' | 'at'>, restSec: number) => void;
   onUndo: (exId: string) => void;
-  rest: { seconds: number; key: number } | null;
   allExercises: Exercise[];
 }) {
   const [last, setLast] = useState<LastPerf | null>(null);
@@ -417,8 +458,6 @@ function ExerciseCard({
               ))}
             </div>
           )}
-
-          {rest && <RestTimer key={rest.key} seconds={rest.seconds} />}
 
           <div className="grid-2">
             {!isBw && (
