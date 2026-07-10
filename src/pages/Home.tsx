@@ -54,7 +54,7 @@ export default function Home() {
     <div className="page">
       <div className="page-head">
         <div>
-          <h1>{hello}, {profile?.name ?? 'Amogh'}</h1>
+          <h1>{profile?.name ? `${hello}, ${profile.name}` : hello}</h1>
           <div className="sub">{new Date().toLocaleDateString(undefined, { weekday: 'long', day: 'numeric', month: 'long' })}</div>
         </div>
         <div className="row">
@@ -162,7 +162,7 @@ export default function Home() {
             <TrendBadge trend={status.backTrend} />
           </div>
           <div className="li">
-            <div className="li-main"><div className="li-title">Right knee</div></div>
+            <div className="li-main"><div className="li-title">Knee</div></div>
             <span style={{ fontWeight: 700, marginRight: 8 }}>{status.kneeAvg7 ?? '—'}/10</span>
             <TrendBadge trend={status.kneeTrend} />
           </div>

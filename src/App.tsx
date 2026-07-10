@@ -1,5 +1,8 @@
 import { Routes, Route } from 'react-router-dom';
+import { useLiveQuery } from 'dexie-react-hooks';
+import { db } from './db';
 import Nav from './components/Nav';
+import Onboarding from './pages/Onboarding';
 import Home from './pages/Home';
 import Train from './pages/Train';
 import RunPage from './pages/Run';
@@ -12,6 +15,10 @@ import Chat from './pages/Chat';
 import AnimTest from './pages/AnimTest';
 
 export default function App() {
+  // distinguish "still loading" (undefined) from "no profile yet" (null)
+  const profile = useLiveQuery(async () => (await db.profile.get('me')) ?? null, []);
+  if (profile === undefined) return null; // db still opening
+  if (profile === null || !profile.onboarded) return <Onboarding />;
   return (
     <>
       <Routes>

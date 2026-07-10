@@ -56,7 +56,7 @@ export default function ExerciseDetail() {
         {e.bicepFocus && <span className="badge ok">bicep builder</span>}
         {e.kneeTherapeutic && <span className="badge info">knee therapy</span>}
         {e.backTherapeutic && <span className="badge info">back therapy</span>}
-        {e.kneeRisk === 2 && <span className="badge warn">care: right knee</span>}
+        {e.kneeRisk === 2 && <span className="badge warn">care: knees</span>}
         {e.backRisk === 2 && <span className="badge warn">care: lower back</span>}
       </div>
 

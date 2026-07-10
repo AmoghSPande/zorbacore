@@ -160,7 +160,7 @@ function PreCheckin({ onDone, onCancel }: { onDone: (s: Symptoms) => void; onCan
         </div>
       </div>
       <div className="card">
-        <div className="card-title">Right-knee discomfort right now</div>
+        <div className="card-title">Knee discomfort right now</div>
         <Scale10 value={knee} onChange={setKnee} />
         <div className="row-between" style={{ marginTop: 6 }}>
           <span className="tag-note">1 · quiet</span><span className="tag-note">10 · painful</span>

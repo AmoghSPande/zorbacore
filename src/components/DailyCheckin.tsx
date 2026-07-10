@@ -44,7 +44,7 @@ export default function DailyCheckin({ onClose }: { onClose: () => void }) {
         <Q title="Sleep quality last night" hint={['awful', 'amazing']} value={sleep} onChange={setSleep} invert />
         <Q title="Energy right now" hint={['drained', 'fresh']} value={energy} onChange={setEnergy} invert />
         <Q title="Muscle soreness" hint={['none', 'very sore']} value={soreness} onChange={setSoreness} />
-        <Q title="Right-knee discomfort" hint={['quiet', 'painful']} value={knee} onChange={setKnee} />
+        <Q title="Knee discomfort" hint={['quiet', 'painful']} value={knee} onChange={setKnee} />
         <Q title="Lower-back stiffness" hint={['loose', 'very stiff']} value={back} onChange={setBack} />
         <label className="field">
           <span className="lbl">Body weight (kg, optional — best measured in the morning)</span>
