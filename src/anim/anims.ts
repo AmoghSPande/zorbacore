@@ -1024,6 +1024,351 @@ export const ANIMS: Record<string, AnimDef> = {
     duration: 1100,
   },
 
+  // ---------------- bodyweight ----------------
+  'push-up': {
+    frames: [
+      {
+        head: [55, 77], shoulder: [66, 84], hip: [96, 92],
+        kneeR: [118, 98], ankleR: [138, 104], toeR: [141, 112],
+        elbowR: [66, 98], wristR: [66, 112],
+      },
+      {
+        head: [54, 93], shoulder: [66, 100], hip: [96, 102],
+        kneeR: [118, 105], ankleR: [138, 108], toeR: [141, 114],
+        elbowR: [79, 107], wristR: [66, 112],
+      },
+    ],
+    duration: 2400,
+  },
+
+  'wall-push-up': {
+    frames: [
+      {
+        head: [109, 30], shoulder: [104, 42], hip: [96, 72],
+        kneeR: [92, 92], ankleR: [88, 114], toeR: [99, 117],
+        elbowR: [126, 46], wristR: [146, 50],
+      },
+      {
+        head: [120, 34], shoulder: [115, 46], hip: [103, 74],
+        kneeR: [95, 93], ankleR: [88, 114], toeR: [99, 117],
+        elbowR: [130, 54], wristR: [146, 50],
+      },
+    ],
+    props: [{ kind: 'rect', x: 150, y: 22, w: 8, h: 98 }],
+    duration: 2400,
+  },
+
+  'bw-squat': {
+    frames: [
+      { ...STAND, elbowR: [100, 50], wristR: [104, 62] },
+      {
+        head: [100, 43], shoulder: [94, 54], hip: [77, 85],
+        kneeR: [103, 92], ankleR: [100, 114], toeR: [111, 117],
+        elbowR: [105, 58], wristR: [119, 56],
+      },
+    ],
+  },
+
+  'wall-sit': {
+    frames: [
+      {
+        head: [80, 40], shoulder: [76, 52], hip: [75, 84],
+        kneeR: [102, 84], ankleR: [102, 112], toeR: [113, 116],
+        elbowR: [80, 66], wristR: [84, 80],
+      },
+      {
+        head: [80, 41], shoulder: [76, 53], hip: [75, 85],
+        kneeR: [102, 85], ankleR: [102, 112], toeR: [113, 116],
+        elbowR: [80, 67], wristR: [84, 81],
+      },
+    ],
+    props: [{ kind: 'rect', x: 62, y: 28, w: 8, h: 92 }],
+    duration: 3600,
+  },
+
+  'mountain-climber': {
+    frames: [
+      {
+        head: [56, 72], shoulder: [66, 78], hip: [98, 84],
+        elbowR: [66, 95], wristR: [66, 112],
+        kneeR: [84, 92], ankleR: [80, 106], toeR: [78, 112],
+        kneeL: [122, 96], ankleL: [140, 108], toeL: [146, 114],
+      },
+      {
+        head: [56, 72], shoulder: [66, 78], hip: [98, 84],
+        elbowR: [66, 95], wristR: [66, 112],
+        kneeR: [122, 96], ankleR: [140, 108], toeR: [146, 114],
+        kneeL: [84, 92], ankleL: [80, 106], toeL: [78, 112],
+      },
+    ],
+    mode: 'cycle',
+    duration: 900,
+  },
+
+  burpee: {
+    frames: [
+      { ...STAND, elbowR: [99, 52], wristR: [100, 66] },
+      {
+        head: [92, 60], shoulder: [86, 72], hip: [80, 95],
+        kneeR: [100, 100], ankleR: [98, 114], toeR: [109, 117],
+        elbowR: [92, 90], wristR: [96, 111],
+      },
+      {
+        head: [54, 82], shoulder: [66, 89], hip: [96, 95],
+        kneeR: [118, 101], ankleR: [138, 108], toeR: [141, 115],
+        elbowR: [66, 100], wristR: [66, 112],
+      },
+    ],
+    duration: 3200,
+  },
+
+  superman: {
+    frames: [
+      {
+        head: [40, 110], shoulder: [54, 111], hip: [92, 112],
+        kneeR: [114, 112], ankleR: [136, 113],
+        elbowR: [38, 112], wristR: [24, 112],
+      },
+      {
+        head: [39, 99], shoulder: [54, 105], hip: [92, 111],
+        kneeR: [114, 107], ankleR: [136, 102],
+        elbowR: [37, 104], wristR: [23, 97],
+      },
+    ],
+    duration: 3200,
+  },
+
+  // ---------------- yoga ----------------
+  'downward-dog': {
+    frames: [
+      {
+        head: [66, 92], shoulder: [76, 80], hip: [102, 58],
+        kneeR: [112, 84], ankleR: [120, 108], toeR: [127, 114],
+        elbowR: [66, 97], wristR: [56, 113],
+      },
+      {
+        head: [66, 93], shoulder: [76, 81], hip: [102, 60],
+        kneeR: [112, 85], ankleR: [120, 112], toeR: [127, 115],
+        elbowR: [66, 98], wristR: [56, 113],
+      },
+    ],
+    duration: 3600,
+  },
+
+  cobra: {
+    frames: [
+      {
+        head: [49, 88], shoulder: [58, 98], hip: [92, 112],
+        kneeR: [114, 112], ankleR: [136, 113],
+        elbowR: [62, 106], wristR: [62, 113],
+      },
+      {
+        head: [50, 72], shoulder: [58, 85], hip: [92, 112],
+        kneeR: [114, 112], ankleR: [136, 113],
+        elbowR: [62, 100], wristR: [62, 113],
+      },
+    ],
+    duration: 3600,
+  },
+
+  'warrior-2': {
+    frames: [
+      {
+        head: [101, 30], shoulder: [96, 42], hip: [96, 70],
+        kneeR: [118, 88], ankleR: [124, 114], toeR: [135, 117],
+        kneeL: [72, 90], ankleL: [58, 112], toeL: [50, 116],
+        elbowR: [116, 42], wristR: [135, 42],
+        elbowL: [76, 42], wristL: [57, 42],
+      },
+      {
+        head: [102, 32], shoulder: [97, 44], hip: [97, 73],
+        kneeR: [120, 90], ankleR: [124, 114], toeR: [135, 117],
+        kneeL: [73, 91], ankleL: [58, 112], toeL: [50, 116],
+        elbowR: [117, 44], wristR: [136, 44],
+        elbowL: [77, 44], wristL: [58, 44],
+      },
+    ],
+    duration: 3800,
+  },
+
+  triangle: {
+    frames: [
+      {
+        head: [116, 76], shoulder: [110, 80], hip: [90, 66],
+        kneeR: [108, 90], ankleR: [122, 113], toeR: [132, 116],
+        kneeL: [72, 90], ankleL: [58, 113], toeL: [50, 116],
+        elbowR: [116, 92], wristR: [120, 103],
+        elbowL: [110, 64], wristL: [108, 50],
+      },
+      {
+        head: [119, 80], shoulder: [113, 84], hip: [90, 67],
+        kneeR: [108, 90], ankleR: [122, 113], toeR: [132, 116],
+        kneeL: [72, 90], ankleL: [58, 113], toeL: [50, 116],
+        elbowR: [119, 95], wristR: [123, 106],
+        elbowL: [112, 68], wristL: [110, 53],
+      },
+    ],
+    duration: 3800,
+  },
+
+  'tree-pose': {
+    frames: [
+      {
+        head: [100, 24], shoulder: [100, 38], hip: [100, 72],
+        kneeL: [96, 92], ankleL: [95, 114],
+        kneeR: [116, 84], ankleR: [102, 79],
+        elbowR: [112, 26], wristR: [104, 13],
+        elbowL: [88, 26], wristL: [96, 13],
+      },
+      {
+        head: [100, 25], shoulder: [100, 39], hip: [100, 73],
+        kneeL: [96, 93], ankleL: [95, 114],
+        kneeR: [115, 85], ankleR: [102, 80],
+        elbowR: [112, 27], wristR: [104, 14],
+        elbowL: [88, 27], wristL: [96, 14],
+      },
+    ],
+    duration: 3800,
+  },
+
+  'chair-pose': {
+    frames: [
+      {
+        head: [97, 38], shoulder: [91, 50], hip: [82, 79],
+        kneeR: [103, 89], ankleR: [100, 114], toeR: [111, 117],
+        elbowR: [102, 39], wristR: [113, 28],
+      },
+      {
+        head: [96, 41], shoulder: [90, 53], hip: [81, 82],
+        kneeR: [103, 91], ankleR: [100, 114], toeR: [111, 117],
+        elbowR: [101, 42], wristR: [112, 31],
+      },
+    ],
+    duration: 3600,
+  },
+
+  'forward-fold': {
+    frames: [
+      {
+        head: [113, 74], shoulder: [107, 66], hip: [88, 66],
+        kneeR: [95, 92], ankleR: [96, 114], toeR: [107, 117],
+        elbowR: [108, 80], wristR: [107, 92],
+      },
+      {
+        head: [107, 99], shoulder: [104, 89], hip: [88, 67],
+        kneeR: [95, 92], ankleR: [96, 114], toeR: [107, 117],
+        elbowR: [104, 98], wristR: [104, 108],
+      },
+    ],
+    duration: 3800,
+  },
+
+  // ---------------- senior ----------------
+  'sit-to-stand': {
+    frames: [
+      {
+        head: [77, 48], shoulder: [72, 60], hip: [66, 90],
+        kneeR: [98, 92], ankleR: [98, 114], toeR: [109, 117],
+        elbowR: [84, 62], wristR: [96, 62],
+      },
+      {
+        head: [103, 24], shoulder: [98, 37], hip: [98, 64],
+        kneeR: [100, 89], ankleR: [100, 114], toeR: [111, 117],
+        elbowR: [102, 48], wristR: [112, 50],
+      },
+    ],
+    props: [{ kind: 'rect', x: 42, y: 92, w: 30, h: 28 }],
+    duration: 3000,
+  },
+
+  'march-in-place': {
+    frames: [
+      {
+        head: [103, 24], shoulder: [98, 37], hip: [98, 64],
+        kneeR: [110, 74], ankleR: [106, 95], toeR: [112, 99],
+        kneeL: [98, 90], ankleL: [96, 113], toeL: [106, 117],
+        elbowR: [92, 50], wristR: [88, 62],
+        elbowL: [104, 50], wristL: [110, 60],
+      },
+      {
+        head: [103, 24], shoulder: [98, 37], hip: [98, 64],
+        kneeR: [98, 90], ankleR: [96, 113], toeR: [106, 117],
+        kneeL: [110, 74], ankleL: [106, 95], toeL: [112, 99],
+        elbowR: [104, 50], wristR: [110, 60],
+        elbowL: [92, 50], wristL: [88, 62],
+      },
+    ],
+    mode: 'cycle',
+    duration: 1400,
+  },
+
+  'single-leg-balance': {
+    frames: [
+      {
+        head: [103, 24], shoulder: [98, 37], hip: [98, 64],
+        kneeR: [100, 89], ankleR: [100, 114], toeR: [111, 117],
+        kneeL: [92, 92], ankleL: [86, 106],
+        elbowR: [110, 46], wristR: [120, 54],
+      },
+      {
+        head: [104, 25], shoulder: [99, 38], hip: [99, 64],
+        kneeR: [100, 89], ankleR: [100, 114], toeR: [111, 117],
+        kneeL: [91, 93], ankleL: [85, 108],
+        elbowR: [111, 47], wristR: [121, 55],
+      },
+    ],
+    duration: 3600,
+  },
+
+  'side-leg-raise': {
+    frames: [
+      { ...FRONT, elbowL: [84, 54], wristL: [72, 50] },
+      {
+        ...FRONT,
+        kneeR: [120, 88], ankleR: [130, 106],
+        elbowL: [84, 54], wristL: [72, 50],
+      },
+    ],
+    props: [{ kind: 'rect', x: 58, y: 40, w: 7, h: 80 }],
+    duration: 2600,
+  },
+
+  // ---------------- trek / carries ----------------
+  'farmers-carry': {
+    frames: [
+      {
+        head: [103, 24], shoulder: [98, 37], hip: [98, 64],
+        kneeR: [110, 89], ankleR: [118, 112], toeR: [128, 114],
+        kneeL: [88, 91], ankleL: [80, 113], toeL: [72, 116],
+        elbowR: [100, 52], wristR: [102, 68],
+        elbowL: [95, 52], wristL: [94, 68],
+      },
+      {
+        head: [103, 24], shoulder: [98, 37], hip: [98, 64],
+        kneeR: [88, 91], ankleR: [80, 113], toeR: [72, 116],
+        kneeL: [110, 89], ankleL: [118, 112], toeL: [128, 114],
+        elbowR: [100, 52], wristR: [102, 68],
+        elbowL: [95, 52], wristL: [94, 68],
+      },
+    ],
+    props: [{ kind: 'db', at: 'wristR' }, { kind: 'db', at: 'wristL' }],
+    mode: 'cycle',
+    duration: 1300,
+  },
+
+  'db-shrug': {
+    frames: [
+      { ...STAND, elbowR: [99, 53], wristR: [100, 69] },
+      {
+        head: [103, 19], shoulder: [98, 32], hip: [98, 64],
+        kneeR: [100, 89], ankleR: [100, 114], toeR: [111, 117],
+        elbowR: [99, 49], wristR: [100, 64],
+      },
+    ],
+    props: [{ kind: 'db', at: 'wristR' }],
+    duration: 2200,
+  },
+
   'run-gait': {
     frames: [
       {

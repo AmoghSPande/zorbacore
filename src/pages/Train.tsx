@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, todayStr } from '../db';
-import type { Exercise, SetLog, Workout, WorkoutType } from '../types';
-import { buildSession, alternativesFor, type SessionPlan, type Symptoms } from '../lib/coach';
+import { db, getProfile, todayStr } from '../db';
+import type { Exercise, SetLog, TrainingStyle, Workout, WorkoutType } from '../types';
+import { buildSession, alternativesFor, STYLES, type SessionPlan, type Symptoms } from '../lib/coach';
 import { detectPRs, fmtDuration, lastPerformance, suggestNext, type LastPerf } from '../lib/stats';
 import { Scale10, Stepper, RestTimer } from '../components/inputs';
 import ExerciseAnim from '../components/ExerciseAnim';
@@ -51,7 +51,8 @@ export default function Train() {
           const gapDays = lastDate
             ? Math.floor((Date.now() - new Date(lastDate + 'T12:00:00').getTime()) / 86400000)
             : 0;
-          const plan = buildSession(stage.type, sym, { minutes, gapDays });
+          const profile = await getProfile();
+          const plan = buildSession(stage.type, sym, { minutes, gapDays }, profile.trainingStyle ?? 'hybrid');
           const id = await db.workouts.add({
             date: todayStr(),
             type: stage.type,
@@ -97,11 +98,15 @@ function StartScreen({ onStart }: { onStart: (t: WorkoutType) => void }) {
     [],
   ) ?? [];
   const exercises = useLiveQuery(() => db.exercises.toArray(), []) ?? [];
+  const profile = useLiveQuery(() => db.profile.get('me'), []);
+  const style: TrainingStyle = profile?.trainingStyle ?? 'hybrid';
   const lastStrength = recent.find((w) => w.type === 'strength-core' || w.type === 'strength-conditioning');
   const suggested: WorkoutType = lastStrength?.type === 'strength-core' ? 'strength-conditioning' : 'strength-core';
+  const other: WorkoutType = suggested === 'strength-core' ? 'strength-conditioning' : 'strength-core';
+  const dayName = (t: WorkoutType) => (t === 'strength-core' ? STYLES[style].dayA : STYLES[style].dayB);
 
   const exMap = new Map(exercises.map((e) => [e.id, e.name]));
-  const preview = buildSession(suggested, { knee: 1, back: 1, energy: 8 })
+  const preview = buildSession(suggested, { knee: 1, back: 1, energy: 8 }, {}, style)
     .blocks.filter((b) => b.section === 'strength')
     .map((b) => exMap.get(b.exerciseId))
     .filter(Boolean)
@@ -112,22 +117,20 @@ function StartScreen({ onStart }: { onStart: (t: WorkoutType) => void }) {
       <div className="page-head">
         <div>
           <h1>Train</h1>
-          <div className="sub">One tap to start — the plan adapts to how you feel today.</div>
+          <div className="sub">{STYLES[style].emoji} {STYLES[style].label} — the plan adapts to how you feel today.</div>
         </div>
       </div>
 
       <button className="btn primary big" onClick={() => onStart(suggested)}>
-        Start {suggested === 'strength-core' ? 'Day 1 · Strength + Core' : 'Day 3 · Strength + Conditioning'}
+        Start {dayName(suggested)}
       </button>
       {preview.length > 0 && (
         <div className="tag-note" style={{ marginTop: -4, textAlign: 'center' }}>
-          {preview.join(' · ')}{preview.length >= 5 ? ' + core' : ''}
+          {preview.join(' · ')}{preview.length >= 5 ? ' + more' : ''}
         </div>
       )}
       <div className="grid-2">
-        <button className="btn" onClick={() => onStart(suggested === 'strength-core' ? 'strength-conditioning' : 'strength-core')}>
-          {suggested === 'strength-core' ? 'Day 3 · Str + Cond' : 'Day 1 · Str + Core'}
-        </button>
+        <button className="btn" onClick={() => onStart(other)}>{dayName(other)}</button>
         <button className="btn mobility" onClick={() => onStart('mobility')}>Mobility session</button>
       </div>
       <button className="btn ghost" onClick={() => onStart('custom')}>Empty workout (pick exercises as you go)</button>
@@ -416,6 +419,14 @@ function ExerciseCard({
   const [swapped, setSwapped] = useState<Exercise | null>(null);
   const activeEx = swapped ?? ex;
 
+  // best-ever for this exercise (weight/e1RM PR, or reps for bodyweight)
+  const pr = useLiveQuery(async () => {
+    const prs = await db.prs.where('exerciseId').equals(activeEx.id).toArray();
+    if (!prs.length) return null;
+    const byKind = (k: string) => prs.filter((p) => p.kind === k).sort((a, b) => b.value - a.value)[0];
+    return byKind('e1rm') ?? byKind('weight') ?? byKind('reps') ?? null;
+  }, [activeEx.id]);
+
   const sets = workout.sets.filter((s) => s.exerciseId === activeEx.id);
   const isTimed = activeEx.loadType === 'time';
   const isBw = activeEx.loadType === 'bodyweight' || isTimed;
@@ -462,6 +473,11 @@ function ExerciseCard({
 
       {open && (
         <div style={{ marginTop: 10, display: 'flex', flexDirection: 'column', gap: 10 }}>
+          {pr && (
+            <div className="tag-note" style={{ color: 'var(--warn)' }}>
+              🏆 Your best: {pr.detail} ({pr.date})
+            </div>
+          )}
           {last && (
             <div className="tag-note">
               Last time ({last.date}): {last.sets.map((s) => (s.weightKg > 0 ? `${s.weightKg}×${s.reps}` : `${s.reps}`)).join(', ')}

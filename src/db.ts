@@ -4,6 +4,9 @@ import type {
   ChatMessage,
   Checkin,
   Exercise,
+  Habit,
+  HabitLog,
+  Meal,
   PR,
   Profile,
   Run,
@@ -20,6 +23,9 @@ class HybridCoachDB extends Dexie {
   bodyMetrics!: Table<BodyMetric, number>;
   prs!: Table<PR, number>;
   chat!: Table<ChatMessage, number>;
+  habits!: Table<Habit, string>;
+  habitLogs!: Table<HabitLog, number>;
+  meals!: Table<Meal, number>;
 
   constructor() {
     super('hybridcoach');
@@ -32,6 +38,11 @@ class HybridCoachDB extends Dexie {
       bodyMetrics: '++id, date',
       prs: '++id, exerciseId, date',
       chat: '++id, at',
+    });
+    this.version(2).stores({
+      habits: 'id',
+      habitLogs: '++id, date, &[habitId+date]',
+      meals: '++id, date',
     });
   }
 }
@@ -88,47 +99,27 @@ export function weekStart(dateStr: string): string {
 
 // ---------- backup ----------
 
+const BACKUP_TABLES = [
+  'profile', 'exercises', 'workouts', 'runs', 'checkins',
+  'bodyMetrics', 'prs', 'chat', 'habits', 'habitLogs', 'meals',
+] as const;
+
 export async function exportAll(): Promise<string> {
-  const [profile, exercises, workouts, runs, checkins, bodyMetrics, prs, chat] =
-    await Promise.all([
-      db.profile.toArray(),
-      db.exercises.toArray(),
-      db.workouts.toArray(),
-      db.runs.toArray(),
-      db.checkins.toArray(),
-      db.bodyMetrics.toArray(),
-      db.prs.toArray(),
-      db.chat.toArray(),
-    ]);
-  return JSON.stringify(
-    { app: 'hybridcoach', version: 1, exportedAt: new Date().toISOString(),
-      profile, exercises, workouts, runs, checkins, bodyMetrics, prs, chat },
-    null,
-    2,
-  );
+  const out: Record<string, unknown> = {
+    app: 'hybridcoach', version: 2, exportedAt: new Date().toISOString(),
+  };
+  for (const t of BACKUP_TABLES) out[t] = await db.table(t).toArray();
+  return JSON.stringify(out, null, 2);
 }
 
 export async function importAll(json: string): Promise<void> {
   const data = JSON.parse(json);
   if (data.app !== 'hybridcoach') throw new Error('Not a HybridCoach backup file');
-  await db.transaction(
-    'rw',
-    [db.profile, db.exercises, db.workouts, db.runs, db.checkins, db.bodyMetrics, db.prs, db.chat],
-    async () => {
-      await Promise.all([
-        db.profile.clear(), db.exercises.clear(), db.workouts.clear(), db.runs.clear(),
-        db.checkins.clear(), db.bodyMetrics.clear(), db.prs.clear(), db.chat.clear(),
-      ]);
-      await Promise.all([
-        db.profile.bulkPut(data.profile ?? []),
-        db.exercises.bulkPut(data.exercises ?? []),
-        db.workouts.bulkPut(data.workouts ?? []),
-        db.runs.bulkPut(data.runs ?? []),
-        db.checkins.bulkPut(data.checkins ?? []),
-        db.bodyMetrics.bulkPut(data.bodyMetrics ?? []),
-        db.prs.bulkPut(data.prs ?? []),
-        db.chat.bulkPut(data.chat ?? []),
-      ]);
-    },
-  );
+  const tables = BACKUP_TABLES.map((t) => db.table(t));
+  await db.transaction('rw', tables, async () => {
+    for (const t of BACKUP_TABLES) {
+      await db.table(t).clear();
+      await db.table(t).bulkPut(data[t] ?? []);
+    }
+  });
 }
