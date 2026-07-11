@@ -109,14 +109,20 @@ export default function Home() {
         <div className="card">
           <div className="row" style={{ gap: 14 }}>
             <div style={{ position: 'relative', width: 74, height: 74, flexShrink: 0 }}>
-              <svg viewBox="0 0 80 80" width={74} height={74}>
+              <svg viewBox="0 0 80 80" width={74} height={74} style={{ filter: `drop-shadow(0 0 10px ${ring(status.readiness.score)}44)` }}>
+                <defs>
+                  <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+                    <stop offset="0%" stopColor={ring(status.readiness.score)} />
+                    <stop offset="100%" stopColor="var(--run)" />
+                  </linearGradient>
+                </defs>
                 <circle cx={40} cy={40} r={34} fill="none" stroke="var(--surface-3)" strokeWidth={7} />
                 <circle
-                  cx={40} cy={40} r={34} fill="none" stroke={ring(status.readiness.score)} strokeWidth={7}
+                  cx={40} cy={40} r={34} fill="none" stroke="url(#ringGrad)" strokeWidth={7}
                   strokeLinecap="round" strokeDasharray={`${(status.readiness.score / 100) * 213.6} 213.6`}
                   transform="rotate(-90 40 40)"
                 />
-                <text x={40} y={46} textAnchor="middle" fontSize={20} fontWeight={750} fill="var(--text)">{status.readiness.score}</text>
+                <text x={40} y={47} textAnchor="middle" fontSize={21} fontWeight={700} fill="var(--text)" fontFamily="Space Grotesk, Inter, sans-serif">{status.readiness.score}</text>
               </svg>
             </div>
             <div className="grow">
@@ -136,7 +142,7 @@ export default function Home() {
 
       {/* today's session */}
       {status && (
-        <div className="card" style={{ borderColor: 'var(--accent)' }}>
+        <div className="card" style={{ borderColor: 'rgba(52,211,153,0.45)', boxShadow: '0 1px 2px rgba(0,0,0,0.35), 0 0 32px -14px rgba(52,211,153,0.5)' }}>
           <div className="card-title">Next session</div>
           <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>{status.nextSession.title}</div>
           <div className="tag-note" style={{ marginTop: 2 }}>{status.nextSession.why}</div>
