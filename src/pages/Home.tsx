@@ -142,7 +142,7 @@ export default function Home() {
 
       {/* today's session */}
       {status && (
-        <div className="card" style={{ borderColor: 'rgba(52,211,153,0.45)', boxShadow: '0 1px 2px rgba(0,0,0,0.35), 0 0 32px -14px rgba(52,211,153,0.5)' }}>
+        <div className="card" style={{ borderColor: 'color-mix(in srgb, var(--accent) 45%, transparent)', boxShadow: '0 1px 2px rgba(0,0,0,0.35), 0 0 32px -14px color-mix(in srgb, var(--accent) 50%, transparent)' }}>
           <div className="card-title">Next session</div>
           <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>{status.nextSession.title}</div>
           <div className="tag-note" style={{ marginTop: 2 }}>{status.nextSession.why}</div>

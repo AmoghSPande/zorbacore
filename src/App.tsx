@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db } from './db';
@@ -19,6 +20,14 @@ import AnimTest from './pages/AnimTest';
 export default function App() {
   // distinguish "still loading" (undefined) from "no profile yet" (null)
   const profile = useLiveQuery(async () => (await db.profile.get('me')) ?? null, []);
+
+  // per-style accent theme (emerald hybrid, amber trek, violet yoga, …)
+  useEffect(() => {
+    const style = profile?.trainingStyle ?? 'hybrid';
+    if (style === 'hybrid') delete document.documentElement.dataset.style;
+    else document.documentElement.dataset.style = style;
+  }, [profile?.trainingStyle]);
+
   if (profile === undefined) return null; // db still opening
   if (profile === null || !profile.onboarded) return <Onboarding />;
   return (
