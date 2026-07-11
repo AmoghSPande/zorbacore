@@ -4,7 +4,7 @@ import type { Profile, TrainingStyle } from '../types';
 import { STYLES } from '../lib/coach';
 import { requestNotifyPermission } from '../lib/notify';
 import { cloudEnabled, signInGoogle, signOutGoogle, syncNow, useCloud } from '../lib/cloud';
-import { Stepper } from '../components/inputs';
+import { Slider } from '../components/inputs';
 import BackLink from '../components/BackLink';
 
 function CloudCard() {
@@ -149,19 +149,19 @@ export default function Settings() {
           <label className="field"><span className="lbl">Name</span>
             <input className="input" value={p.name} onChange={(e) => set({ name: e.target.value })} />
           </label>
-          <label className="field"><span className="lbl">Height (cm)</span>
-            <Stepper value={p.heightCm ?? 0} onChange={(v) => set({ heightCm: v || undefined })} step={1} />
+          <label className="field"><span className="lbl">Height</span>
+            <Slider value={p.heightCm ?? 170} onChange={(v) => set({ heightCm: v })} min={130} max={210} unit="cm" />
           </label>
         </div>
-        <div className="grid-3">
-          <label className="field"><span className="lbl">Target weight</span>
-            <Stepper value={p.targetWeightKg ?? 0} onChange={(v) => set({ targetWeightKg: v || undefined })} step={0.5} />
-          </label>
+        <label className="field" style={{ marginBottom: 10 }}><span className="lbl">Target weight</span>
+          <Slider value={p.targetWeightKg ?? 70} onChange={(v) => set({ targetWeightKg: v })} min={40} max={140} step={0.5} unit="kg" />
+        </label>
+        <div className="grid-2">
           <label className="field"><span className="lbl">Target waist</span>
-            <Stepper value={p.targetWaistCm ?? 0} onChange={(v) => set({ targetWaistCm: v || undefined })} step={0.5} />
+            <Slider value={p.targetWaistCm ?? 90} onChange={(v) => set({ targetWaistCm: v })} min={60} max={130} step={0.5} unit="cm" />
           </label>
-          <label className="field"><span className="lbl">Target BF %</span>
-            <Stepper value={p.targetBodyFatPct ?? 0} onChange={(v) => set({ targetBodyFatPct: v || undefined })} step={0.5} />
+          <label className="field"><span className="lbl">Target body fat</span>
+            <Slider value={p.targetBodyFatPct ?? 20} onChange={(v) => set({ targetBodyFatPct: v })} min={8} max={45} step={0.5} unit="%" />
           </label>
         </div>
         <div className="tag-note" style={{ marginTop: 8 }}>
@@ -207,14 +207,12 @@ export default function Settings() {
 
       <div className="card">
         <div className="card-title">Nutrition targets (for the calorie tracker)</div>
-        <div className="grid-2">
-          <label className="field"><span className="lbl">Calories/day (kcal)</span>
-            <Stepper value={p.calorieTarget ?? 0} onChange={(v) => set({ calorieTarget: v || undefined })} step={50} />
-          </label>
-          <label className="field"><span className="lbl">Protein/day (g)</span>
-            <Stepper value={p.proteinTarget ?? 0} onChange={(v) => set({ proteinTarget: v || undefined })} step={5} />
-          </label>
-        </div>
+        <label className="field" style={{ marginBottom: 10 }}><span className="lbl">Calories per day</span>
+          <Slider value={p.calorieTarget ?? 2000} onChange={(v) => set({ calorieTarget: v })} min={1200} max={3500} step={50} unit="kcal" />
+        </label>
+        <label className="field"><span className="lbl">Protein per day</span>
+          <Slider value={p.proteinTarget ?? 100} onChange={(v) => set({ proteinTarget: v })} min={40} max={220} step={5} unit="g" />
+        </label>
         <div className="tag-note" style={{ marginTop: 8 }}>
           Rough starting points for fat loss: bodyweight (kg) × 24–26 kcal, protein 1.6–2 g per kg.
         </div>
@@ -222,14 +220,10 @@ export default function Settings() {
 
       <div className="card">
         <div className="card-title">Schedule & reminders</div>
-        <div className="row-between" style={{ marginBottom: 10 }}>
-          <span style={{ fontSize: '0.9rem' }}>Gym sessions per week</span>
-          <div className="row">
-            {[2, 3].map((n) => (
-              <button key={n} className={`chip ${p.trainingDaysPerWeek === n ? 'on' : ''}`} onClick={() => set({ trainingDaysPerWeek: n as 2 | 3 })}>{n}</button>
-            ))}
-          </div>
-        </div>
+        <label className="field" style={{ marginBottom: 10 }}><span className="lbl">Training days per week</span>
+          <Slider value={p.trainingDaysPerWeek ?? 3} onChange={(v) => set({ trainingDaysPerWeek: v })} min={1} max={7}
+            format={(v) => `${v} day${v > 1 ? 's' : ''} / week`} />
+        </label>
         <div className="row-between" style={{ marginBottom: 10 }}>
           <span style={{ fontSize: '0.9rem' }}>Daily reminder</span>
           <button

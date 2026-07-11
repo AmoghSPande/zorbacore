@@ -173,6 +173,22 @@ export interface Meal {
   at: number;
 }
 
+// ---------- Custom plans ----------
+
+export interface CustomPlanBlock {
+  exerciseId: string;
+  sets: number;
+  reps: string; // display target, e.g. "8-12"
+}
+
+export interface CustomPlan {
+  id: string; // stable slug for cross-device sync
+  name: string;
+  blocks: CustomPlanBlock[];
+  createdAt: number;
+  updatedAt: number;
+}
+
 // ---------- Profile / settings ----------
 
 export type TrainingStyle = 'hybrid' | 'trek' | 'bodybuilding' | 'bodyweight' | 'yoga' | 'senior';
@@ -186,7 +202,7 @@ export interface EquipmentItem {
 export interface Profile {
   id: string; // always 'me'
   name: string;
-  trainingDaysPerWeek: 2 | 3;
+  trainingDaysPerWeek: number; // 1–7
   gymDays: number[]; // 0=Sun..6=Sat preferred gym days
   runDays: number[];
   heightCm?: number;

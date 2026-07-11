@@ -4,7 +4,7 @@ export type Rec = Record<string, unknown>;
 
 export const SYNC_TABLES = [
   'profile', 'exercises', 'workouts', 'runs', 'checkins', 'bodyMetrics', 'prs', 'chat',
-  'habits', 'habitLogs', 'meals',
+  'habits', 'habitLogs', 'meals', 'plans',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
@@ -25,6 +25,7 @@ export function keyOf(table: SyncTable, r: Rec): string {
     case 'habits': return String(r.id);
     case 'habitLogs': return `${r.habitId}|${r.date}`;
     case 'meals': return String(r.at);
+    case 'plans': return String(r.id);
   }
 }
 

@@ -1,6 +1,7 @@
 import Dexie, { type Table } from 'dexie';
 import type {
   BodyMetric,
+  CustomPlan,
   ChatMessage,
   Checkin,
   Exercise,
@@ -26,6 +27,7 @@ class HybridCoachDB extends Dexie {
   habits!: Table<Habit, string>;
   habitLogs!: Table<HabitLog, number>;
   meals!: Table<Meal, number>;
+  plans!: Table<CustomPlan, string>;
 
   constructor() {
     super('hybridcoach');
@@ -43,6 +45,9 @@ class HybridCoachDB extends Dexie {
       habits: 'id',
       habitLogs: '++id, date, &[habitId+date]',
       meals: '++id, date',
+    });
+    this.version(3).stores({
+      plans: 'id',
     });
   }
 }
@@ -101,7 +106,7 @@ export function weekStart(dateStr: string): string {
 
 const BACKUP_TABLES = [
   'profile', 'exercises', 'workouts', 'runs', 'checkins',
-  'bodyMetrics', 'prs', 'chat', 'habits', 'habitLogs', 'meals',
+  'bodyMetrics', 'prs', 'chat', 'habits', 'habitLogs', 'meals', 'plans',
 ] as const;
 
 export async function exportAll(): Promise<string> {
