@@ -7,6 +7,7 @@ import { buildSession, alternativesFor, STYLES, type SessionPlan, type Symptoms 
 import { detectPRs, fmtDuration, lastPerformance, suggestNext, type LastPerf } from '../lib/stats';
 import { Scale10, Stepper, RestTimer } from '../components/inputs';
 import ExerciseAnim from '../components/ExerciseAnim';
+import Celebration from '../components/Celebration';
 
 type Stage =
   | { name: 'idle' }
@@ -241,6 +242,7 @@ function ActiveWorkout({
   const [extraIds, setExtraIds] = useState<string[]>([]);
   const [showPicker, setShowPicker] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const style = useLiveQuery(async () => (await db.profile.get('me'))?.trainingStyle ?? 'hybrid', []);
   useEffect(() => {
     const iv = setInterval(() => setNow(Date.now()), 30000);
     return () => clearInterval(iv);
@@ -289,7 +291,6 @@ function ActiveWorkout({
     onFinish(prs.length);
   };
 
-  const style = useLiveQuery(async () => (await db.profile.get('me'))?.trainingStyle ?? 'hybrid', []);
   const sections = [
     { id: 'warmup' as const, label: style === 'yoga' ? 'Arrive' : 'Warm-up' },
     { id: 'strength' as const, label: style === 'yoga' ? 'Flow' : style === 'senior' ? 'Main work' : 'Strength' },
@@ -606,6 +607,9 @@ function ExercisePicker({
 function Summary({ workoutId, prCount, onClose }: { workoutId: number; prCount: number; onClose: () => void }) {
   const workout = useLiveQuery(() => db.workouts.get(workoutId), [workoutId]);
   const exercises = useLiveQuery(() => db.exercises.toArray(), []) ?? [];
+  useEffect(() => {
+    if (prCount > 0 && navigator.vibrate) navigator.vibrate([90, 50, 90, 50, 220]);
+  }, [prCount]);
   if (!workout) return null;
   const exMap = new Map(exercises.map((e) => [e.id, e]));
   const byEx = new Map<string, SetLog[]>();
@@ -619,7 +623,8 @@ function Summary({ workoutId, prCount, onClose }: { workoutId: number; prCount: 
 
   return (
     <div className="page">
-      <div className="page-head"><h1>Workout complete 🎉</h1></div>
+      {prCount > 0 && <Celebration />}
+      <div className="page-head"><h1>{prCount > 0 ? 'New record! 🏆' : 'Workout complete 🎉'}</h1></div>
       <div className="card">
         <div className="grid-3">
           <div className="stat"><span className="v">{workout.endedAt ? fmtDuration(workout.endedAt - workout.startedAt) : '—'}</span><span className="k">duration</span></div>
@@ -634,8 +639,10 @@ function Summary({ workoutId, prCount, onClose }: { workoutId: number; prCount: 
         </div>
       </div>
       {prCount > 0 && (
-        <div className="card" style={{ borderColor: 'var(--warn)' }}>
-          <div style={{ fontSize: '0.92rem' }}>🏆 {prCount} personal record{prCount > 1 ? 's' : ''} today — check the Progress tab.</div>
+        <div className="card pr-banner">
+          <div style={{ fontSize: '0.95rem', fontWeight: 650 }}>
+            🏆 {prCount} personal record{prCount > 1 ? 's' : ''} today — stronger than you've ever been. Details in Progress.
+          </div>
         </div>
       )}
       <div className="card pad-sm">
