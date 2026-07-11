@@ -138,7 +138,44 @@ export interface ChatMessage {
   at: number;
 }
 
+// ---------- Habits ----------
+
+export interface Habit {
+  id: string; // stable slug (survives cross-device sync)
+  name: string;
+  emoji?: string;
+  /** how many days per week counts as success (default 7) */
+  targetPerWeek?: number;
+  createdAt: number;
+  archived?: boolean;
+}
+
+export interface HabitLog {
+  id?: number;
+  habitId: string;
+  date: string; // YYYY-MM-DD
+  at: number;
+}
+
+// ---------- Food / calories ----------
+
+export type MealSlot = 'breakfast' | 'lunch' | 'snacks' | 'dinner';
+
+export interface Meal {
+  id?: number;
+  date: string;
+  meal: MealSlot;
+  name: string;
+  foodId?: string; // from the built-in food DB, if picked
+  qty: number;
+  kcal: number; // total for qty
+  protein?: number; // grams, total for qty
+  at: number;
+}
+
 // ---------- Profile / settings ----------
+
+export type TrainingStyle = 'hybrid' | 'trek' | 'bodybuilding' | 'bodyweight' | 'yoga' | 'senior';
 
 export interface EquipmentItem {
   id: string;
@@ -162,6 +199,9 @@ export interface Profile {
   backIssue?: boolean;
   conditionsNote?: string;
   goalsNote?: string;
+  trainingStyle?: TrainingStyle; // default 'hybrid'
+  calorieTarget?: number; // kcal/day
+  proteinTarget?: number; // g/day
   equipment: EquipmentItem[];
   remindersEnabled: boolean;
   reminderTime: string; // "07:30"

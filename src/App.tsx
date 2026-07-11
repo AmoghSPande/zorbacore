@@ -12,6 +12,8 @@ import Library from './pages/Library';
 import ExerciseDetail from './pages/ExerciseDetail';
 import Settings from './pages/Settings';
 import Chat from './pages/Chat';
+import Habits from './pages/Habits';
+import Food from './pages/Food';
 import AnimTest from './pages/AnimTest';
 
 export default function App() {
@@ -31,6 +33,8 @@ export default function App() {
         <Route path="/library/:id" element={<ExerciseDetail />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/chat" element={<Chat />} />
+        <Route path="/habits" element={<Habits />} />
+        <Route path="/food" element={<Food />} />
         <Route path="/animtest" element={<AnimTest />} />
         <Route path="*" element={<Home />} />
       </Routes>

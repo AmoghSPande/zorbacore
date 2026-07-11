@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { db, exportAll, getProfile, importAll, updateProfile } from '../db';
-import type { Profile } from '../types';
+import type { Profile, TrainingStyle } from '../types';
+import { STYLES } from '../lib/coach';
 import { requestNotifyPermission } from '../lib/notify';
 import { cloudEnabled, signInGoogle, signOutGoogle, syncNow, useCloud } from '../lib/cloud';
 import { Stepper } from '../components/inputs';
@@ -178,6 +179,45 @@ export default function Settings() {
         </div>
         <input className="input" placeholder="Other conditions (optional)"
           value={p.conditionsNote ?? ''} onChange={(e) => set({ conditionsNote: e.target.value || undefined })} />
+      </div>
+
+      <div className="card">
+        <div className="card-title">Training style</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {(Object.keys(STYLES) as TrainingStyle[]).map((id) => (
+            <button
+              key={id}
+              className="row"
+              style={{
+                textAlign: 'left', padding: '8px 10px', borderRadius: 10,
+                border: `1px solid ${(p.trainingStyle ?? 'hybrid') === id ? 'var(--accent)' : 'var(--border)'}`,
+                background: (p.trainingStyle ?? 'hybrid') === id ? 'var(--accent-dim)' : 'var(--surface-2)',
+              }}
+              onClick={() => set({ trainingStyle: id })}
+            >
+              <span style={{ fontSize: '1.15rem', flexShrink: 0 }}>{STYLES[id].emoji}</span>
+              <div className="grow">
+                <div style={{ fontWeight: 650, fontSize: '0.9rem' }}>{STYLES[id].label}</div>
+                <div className="tag-note">{STYLES[id].desc}</div>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="card">
+        <div className="card-title">Nutrition targets (for the calorie tracker)</div>
+        <div className="grid-2">
+          <label className="field"><span className="lbl">Calories/day (kcal)</span>
+            <Stepper value={p.calorieTarget ?? 0} onChange={(v) => set({ calorieTarget: v || undefined })} step={50} />
+          </label>
+          <label className="field"><span className="lbl">Protein/day (g)</span>
+            <Stepper value={p.proteinTarget ?? 0} onChange={(v) => set({ proteinTarget: v || undefined })} step={5} />
+          </label>
+        </div>
+        <div className="tag-note" style={{ marginTop: 8 }}>
+          Rough starting points for fat loss: bodyweight (kg) × 24–26 kcal, protein 1.6–2 g per kg.
+        </div>
       </div>
 
       <div className="card">

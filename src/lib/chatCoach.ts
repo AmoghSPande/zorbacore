@@ -27,7 +27,7 @@ export async function buildContext(): Promise<string> {
     profile.goalsNote ? `In their own words: "${profile.goalsNote}"` : null,
   ].filter(Boolean).join('. ');
   const lines = [
-    `Athlete: ${profile.name || 'unnamed'}, intermediate, desk job. Constraints: ${constraints}. ${profile.trainingDaysPerWeek} gym days/week + running. Goals: ${goals}.`,
+    `Athlete: ${profile.name || 'unnamed'}, training style: ${profile.trainingStyle ?? 'hybrid'}, desk job. Constraints: ${constraints}. ${profile.trainingDaysPerWeek} gym days/week. Goals: ${goals}.`,
     `Equipment: rack, deadlift platform, barbells, dumbbells, benches, lat pulldown, seated row, leg extension, leg curl, chest fly, chest press, bicep curl machine, cable crossover, treadmills, spin bike, tractor tyre, mudgals.`,
     status.checkin
       ? `Today's check-in: sleep ${status.checkin.sleep}/10, energy ${status.checkin.energy}/10, soreness ${status.checkin.soreness}/10, knee ${status.checkin.knee}/10, back ${status.checkin.back}/10. Readiness ${status.readiness?.score}/100 (${status.readiness?.level}).`

@@ -1,5 +1,6 @@
-import { db, daysAgoStr, todayStr } from '../db';
+import { db, daysAgoStr, getProfile, todayStr } from '../db';
 import type { Checkin, WorkoutType } from '../types';
+import { STYLES } from './coach';
 
 export interface Readiness {
   score: number; // 0-100
@@ -131,11 +132,13 @@ export async function computeDayStatus(): Promise<DayStatus> {
   } else if (strengthThisWeek >= 3) {
     nextSession = { kind: 'run', title: 'Run or full recovery', why: 'Three gym sessions logged this week — that box is ticked.' };
   } else {
+    const profile = await getProfile();
+    const style = STYLES[profile.trainingStyle ?? 'hybrid'];
     const type: WorkoutType = lastStrength?.type === 'strength-core' ? 'strength-conditioning' : 'strength-core';
     nextSession = {
       kind: 'strength', type,
-      title: type === 'strength-core' ? 'Day 1 · Full Body Strength + Core' : 'Day 3 · Strength + Conditioning',
-      why: lastStrength ? `Alternates with your last gym session (${lastStrength.date}).` : 'Start of your hybrid cycle.',
+      title: type === 'strength-core' ? style.dayA : style.dayB,
+      why: lastStrength ? `Alternates with your last session (${lastStrength.date}).` : 'Start of your training cycle.',
     };
   }
 

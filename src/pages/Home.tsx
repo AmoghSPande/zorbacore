@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, getProfile } from '../db';
+import { db, getProfile, todayStr } from '../db';
 import type { Profile } from '../types';
 import { computeDayStatus, type DayStatus } from '../lib/readiness';
 import { computeRunStats, fmtTime, type RunStats } from '../lib/running';
@@ -11,6 +11,30 @@ import { dueNudge } from '../lib/notify';
 
 function ring(score: number): string {
   return score >= 72 ? 'var(--accent)' : score >= 48 ? 'var(--warn)' : 'var(--danger)';
+}
+
+function HabitsFoodTiles() {
+  const today = todayStr();
+  const habits = (useLiveQuery(() => db.habits.toArray(), []) ?? []).filter((h) => !h.archived);
+  const habitLogs = useLiveQuery(() => db.habitLogs.where('date').equals(today).toArray(), []) ?? [];
+  const meals = useLiveQuery(() => db.meals.where('date').equals(today).toArray(), []) ?? [];
+  const kcal = Math.round(meals.reduce((a, m) => a + m.kcal, 0));
+  const habitsDone = habitLogs.filter((l) => habits.some((h) => h.id === l.habitId)).length;
+
+  return (
+    <div className="grid-2">
+      <Link to="/habits" className="card pad-sm stat" style={{ display: 'flex' }}>
+        <span className="v" style={{ color: habits.length && habitsDone === habits.length ? 'var(--accent)' : undefined }}>
+          {habits.length ? `${habitsDone}/${habits.length}` : '＋'}
+        </span>
+        <span className="k">habits today</span>
+      </Link>
+      <Link to="/food" className="card pad-sm stat" style={{ display: 'flex' }}>
+        <span className="v">{kcal > 0 ? kcal : '＋'}<small>{kcal > 0 ? ' kcal' : ''}</small></span>
+        <span className="k">food today</span>
+      </Link>
+    </div>
+  );
 }
 
 function TrendBadge({ trend, goodWhenDown = true }: { trend: 'up' | 'down' | 'flat'; goodWhenDown?: boolean }) {
@@ -136,6 +160,9 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* habits + food quick tiles */}
+      <HabitsFoodTiles />
 
       {/* stats row */}
       <div className="grid-3">

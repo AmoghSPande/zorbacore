@@ -1,10 +1,11 @@
 import type { Exercise } from '../types';
+import { EXTRA_EXERCISES } from './exercisesExtra';
 
-export const LIBRARY_VERSION = 2;
+export const LIBRARY_VERSION = 3;
 
-type ExOverrides = Partial<Exercise> & Pick<Exercise, 'id' | 'name' | 'category' | 'muscles'>;
+export type ExOverrides = Partial<Exercise> & Pick<Exercise, 'id' | 'name' | 'category' | 'muscles'>;
 
-function ex(o: ExOverrides): Exercise {
+export function ex(o: ExOverrides): Exercise {
   return {
     secondaryMuscles: [],
     equipment: [],
@@ -22,7 +23,7 @@ function ex(o: ExOverrides): Exercise {
   };
 }
 
-export const EXERCISES: Exercise[] = [
+const BASE_EXERCISES: Exercise[] = [
   // ================= SQUAT PATTERNS =================
   ex({
     id: 'barbell-back-squat', name: 'Barbell Back Squat', category: 'strength',
@@ -972,3 +973,5 @@ export const EXERCISES: Exercise[] = [
     backMod: 'Run tall and check posture each kilometre; a gentle core brace quiets most run-related back ache.',
   }),
 ];
+
+export const EXERCISES: Exercise[] = [...BASE_EXERCISES, ...EXTRA_EXERCISES];

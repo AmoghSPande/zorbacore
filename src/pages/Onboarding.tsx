@@ -1,5 +1,7 @@
 import { useState } from 'react';
 import { updateProfile } from '../db';
+import type { TrainingStyle } from '../types';
+import { STYLES } from '../lib/coach';
 import { cloudEnabled, signInGoogle, useCloud } from '../lib/cloud';
 import { Stepper } from '../components/inputs';
 
@@ -20,9 +22,10 @@ export default function Onboarding() {
   const [targetWeightKg, setTargetWeightKg] = useState(0);
   const [gymDays, setGymDays] = useState<2 | 3>(3);
   const [goalsNote, setGoalsNote] = useState('');
+  const [style, setStyle] = useState<TrainingStyle | null>(null);
   const [signErr, setSignErr] = useState<string | null>(null);
 
-  const TOTAL = 5;
+  const TOTAL = 6;
 
   const finish = async () => {
     await updateProfile({
@@ -34,6 +37,7 @@ export default function Onboarding() {
       targetWeightKg: targetWeightKg || undefined,
       trainingDaysPerWeek: gymDays,
       goalsNote: goalsNote.trim() || undefined,
+      trainingStyle: style ?? 'hybrid',
       onboarded: true,
     });
     if (cloud.user) {
@@ -141,6 +145,31 @@ export default function Onboarding() {
 
         {step === 3 && (
           <>
+            <h1>How do you want to train?</h1>
+            <p className="tag-note">This shapes every session the coach builds. You can change it anytime in Settings.</p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+              {(Object.keys(STYLES) as TrainingStyle[]).map((id) => (
+                <button
+                  key={id}
+                  className="card pad-sm row"
+                  style={{ textAlign: 'left', borderColor: style === id ? 'var(--accent)' : 'var(--border)' }}
+                  onClick={() => setStyle(id)}
+                >
+                  <span style={{ fontSize: '1.4rem', flexShrink: 0 }}>{STYLES[id].emoji}</span>
+                  <div className="grow">
+                    <div className="li-title">{STYLES[id].label}</div>
+                    <div className="li-sub" style={{ whiteSpace: 'normal' }}>{STYLES[id].desc}</div>
+                  </div>
+                  {style === id && <span style={{ color: 'var(--accent)', fontWeight: 700 }}>✓</span>}
+                </button>
+              ))}
+            </div>
+            <Nav canNext={style !== null} />
+          </>
+        )}
+
+        {step === 4 && (
+          <>
             <h1>Your targets</h1>
             <label className="field">
               <span className="lbl">Target body weight (kg) — optional, guides the fat-loss dashboard</span>
@@ -163,13 +192,13 @@ export default function Onboarding() {
           </>
         )}
 
-        {step === 4 && (
+        {step === 5 && (
           <>
             <h1>Ready, {name.trim() || 'athlete'} 👊</h1>
             <div className="card">
               <div className="card-title">Your space is set up with</div>
               <ul style={{ paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.92rem' }}>
-                <li>{gymDays} gym sessions/week + running + daily mobility, planned for you</li>
+                <li>{STYLES[style ?? 'hybrid'].emoji} {STYLES[style ?? 'hybrid'].label} training, {gymDays} sessions/week</li>
                 <li>{knee ? 'Knee-protective exercise choices and pre-workout knee checks' : 'Full exercise menu (no knee restrictions)'}</li>
                 <li>{back ? 'A lower-back recovery program woven into every week' : 'Core stability work to keep your back healthy'}</li>
                 <li>Daily readiness check-ins that shape each session</li>

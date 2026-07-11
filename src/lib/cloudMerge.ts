@@ -4,11 +4,12 @@ export type Rec = Record<string, unknown>;
 
 export const SYNC_TABLES = [
   'profile', 'exercises', 'workouts', 'runs', 'checkins', 'bodyMetrics', 'prs', 'chat',
+  'habits', 'habitLogs', 'meals',
 ] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
 /** Tables whose primary key is a device-local auto-increment (stripped for cloud). */
-export const AUTOID_TABLES: SyncTable[] = ['workouts', 'runs', 'checkins', 'bodyMetrics', 'prs', 'chat'];
+export const AUTOID_TABLES: SyncTable[] = ['workouts', 'runs', 'checkins', 'bodyMetrics', 'prs', 'chat', 'habitLogs', 'meals'];
 
 /** Natural identity of a record, stable across devices. */
 export function keyOf(table: SyncTable, r: Rec): string {
@@ -21,6 +22,9 @@ export function keyOf(table: SyncTable, r: Rec): string {
     case 'bodyMetrics': return `${r.date}|${r.weightKg ?? ''}|${r.waistCm ?? ''}|${r.bodyFatPct ?? ''}|${r.armCm ?? ''}`;
     case 'prs': return `${r.exerciseId}|${r.kind}|${r.date}|${r.value}`;
     case 'chat': return String(r.at);
+    case 'habits': return String(r.id);
+    case 'habitLogs': return `${r.habitId}|${r.date}`;
+    case 'meals': return String(r.at);
   }
 }
 
