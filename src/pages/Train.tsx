@@ -34,7 +34,7 @@ export default function Train() {
           return;
         } catch { /* fall through */ }
       }
-      setStage({ name: 'active', workoutId: active.id, plan: { type: active.type, title: 'Workout', blocks: [], adaptations: [] } });
+      setStage({ name: 'active', workoutId: active.id, plan: { type: active.type, title: 'Workout', blocks: [], adaptations: [], estMinutes: 0 } });
     }
   }, [active, stage.name]);
 
@@ -42,8 +42,16 @@ export default function Train() {
     return (
       <PreCheckin
         onCancel={() => setStage({ name: 'idle' })}
-        onDone={async (sym) => {
-          const plan = buildSession(stage.type, sym);
+        onDone={async (sym, minutes) => {
+          // days since the last finished gym session — lets the plan ease back in
+          const finished = await db.workouts
+            .filter((w) => w.endedAt !== undefined && (w.type === 'strength-core' || w.type === 'strength-conditioning'))
+            .toArray();
+          const lastDate = finished.map((w) => w.date).sort().pop();
+          const gapDays = lastDate
+            ? Math.floor((Date.now() - new Date(lastDate + 'T12:00:00').getTime()) / 86400000)
+            : 0;
+          const plan = buildSession(stage.type, sym, { minutes, gapDays });
           const id = await db.workouts.add({
             date: todayStr(),
             type: stage.type,
@@ -152,10 +160,11 @@ export function typeLabel(t: WorkoutType): string {
 
 // ---------------- pre-workout check-in ----------------
 
-function PreCheckin({ onDone, onCancel }: { onDone: (s: Symptoms) => void; onCancel: () => void }) {
+function PreCheckin({ onDone, onCancel }: { onDone: (s: Symptoms, minutes: number) => void; onCancel: () => void }) {
   const [back, setBack] = useState<number>();
   const [knee, setKnee] = useState<number>();
   const [energy, setEnergy] = useState<number>();
+  const [minutes, setMinutes] = useState(60);
   const ready = back != null && knee != null && energy != null;
   return (
     <div className="page">
@@ -163,6 +172,24 @@ function PreCheckin({ onDone, onCancel }: { onDone: (s: Symptoms) => void; onCan
         <div>
           <h1>Quick check-in</h1>
           <div className="sub">30 seconds — this shapes today's plan.</div>
+        </div>
+      </div>
+      <div className="card">
+        <div className="card-title">How much time do you have?</div>
+        <div className="grid-3" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
+          {[30, 45, 60, 90].map((m) => (
+            <button
+              key={m}
+              className="btn sm"
+              style={minutes === m ? { background: 'var(--accent)', borderColor: 'var(--accent)', color: '#052e1c' } : {}}
+              onClick={() => setMinutes(m)}
+            >
+              {m === 90 ? '90+' : m} min
+            </button>
+          ))}
+        </div>
+        <div className="tag-note" style={{ marginTop: 8 }}>
+          The session is composed to fit — short on time still moves you forward.
         </div>
       </div>
       <div className="card">
@@ -186,7 +213,7 @@ function PreCheckin({ onDone, onCancel }: { onDone: (s: Symptoms) => void; onCan
           <span className="tag-note">1 · drained</span><span className="tag-note">10 · fresh</span>
         </div>
       </div>
-      <button className="btn primary big" disabled={!ready} onClick={() => ready && onDone({ back: back!, knee: knee!, energy: energy! })}>
+      <button className="btn primary big" disabled={!ready} onClick={() => ready && onDone({ back: back!, knee: knee!, energy: energy! }, minutes)}>
         Build today's workout
       </button>
       <button className="btn ghost" onClick={onCancel}>Cancel</button>
@@ -273,6 +300,7 @@ function ActiveWorkout({
           <h1>{plan.title}</h1>
           <div className="sub">
             {fmtDuration(now - workout.startedAt)} · {workout.sets.length} sets logged
+            {plan.estMinutes ? ` · target ~${plan.estMinutes} min` : ''}
           </div>
         </div>
         <button className="btn sm primary" onClick={finish}>Finish</button>
@@ -323,7 +351,7 @@ function ActiveWorkout({
               return (
                 <ExerciseCard
                   key={id} ex={ex}
-                  block={{ exerciseId: id, sets: 3, reps: '8–12', section: 'strength' }}
+                  block={{ exerciseId: id, sets: 3, reps: '8–12', section: 'strength', tier: 1 }}
                   workout={workout} sym={sym}
                   open={open === id}
                   onToggle={() => setOpen(open === id ? null : id)}

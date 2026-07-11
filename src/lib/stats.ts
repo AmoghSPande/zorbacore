@@ -50,6 +50,32 @@ export function suggestNext(last: LastPerf | null, repLow = 8, repHigh = 12): Su
     // bodyweight: add a rep
     return { weightKg: 0, reps: topSet.reps + 1, rationale: 'Add one rep to your last best.' };
   }
+
+  // layoffs: restart below the last working weight instead of chasing it
+  const daysSince = Math.floor((Date.now() - new Date(last.date + 'T12:00:00').getTime()) / 86400000);
+  const roundLoad = (w: number) => Math.max(2.5, Math.round(w / 2.5) * 2.5);
+  if (daysSince > 42) {
+    return {
+      weightKg: roundLoad(topSet.weightKg * 0.8),
+      reps: repLow,
+      rationale: `~${Math.round(daysSince / 7)} weeks since you did this — restart ~20% lighter and rebuild fast.`,
+    };
+  }
+  if (daysSince > 21) {
+    return {
+      weightKg: roundLoad(topSet.weightKg * 0.9),
+      reps: topSet.reps,
+      rationale: `${Math.round(daysSince / 7)}-week gap — take ~10% off and groove the movement again.`,
+    };
+  }
+  if (daysSince > 10) {
+    return {
+      weightKg: topSet.weightKg,
+      reps: topSet.reps,
+      rationale: `${daysSince} days since last time — repeat your last numbers, no increase today.`,
+    };
+  }
+
   const hardness = avgRpe ?? topSet.rpe ?? 8;
   if (hardness >= 9.5) {
     return { weightKg: topSet.weightKg, reps: topSet.reps, rationale: 'Last session was near max — repeat it and own the weight.' };

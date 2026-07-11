@@ -116,6 +116,12 @@ export default function Home() {
           <div className="card-title">Next session</div>
           <div style={{ fontWeight: 700, fontSize: '1.05rem' }}>{status.nextSession.title}</div>
           <div className="tag-note" style={{ marginTop: 2 }}>{status.nextSession.why}</div>
+          {status.gapDays != null && status.gapDays >= 4 && (
+            <div className="tag-note" style={{ marginTop: 4, color: 'var(--warn)' }}>
+              It's been {status.gapDays} days — no guilt, the session will ease you back in.
+              You'll also pick how much time you have.
+            </div>
+          )}
           <div className="row" style={{ marginTop: 10 }}>
             {status.nextSession.kind === 'strength' && (
               <button className="btn primary grow" onClick={() => nav('/train')}>Start workout</button>
