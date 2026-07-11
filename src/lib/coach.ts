@@ -12,6 +12,8 @@ export interface PlannedBlock {
   reps: string; // display target, e.g. "8–12" or "30–45s"
   note?: string;
   section: 'warmup' | 'strength' | 'core' | 'conditioning';
+  /** smallest time budget that includes this block: 1=30min, 2=45, 3=60, 4=90 */
+  tier: 1 | 2 | 3 | 4;
 }
 
 export interface SessionPlan {
@@ -19,6 +21,14 @@ export interface SessionPlan {
   title: string;
   blocks: PlannedBlock[];
   adaptations: string[];
+  estMinutes: number;
+}
+
+export interface SessionOptions {
+  /** available time today; sessions are composed to fit (default 60) */
+  minutes?: number;
+  /** days since the last gym session — long gaps ease the plan back in */
+  gapDays?: number;
 }
 
 /**
@@ -94,12 +104,33 @@ export function applyGates(
   return { exerciseId: id, swap };
 }
 
-function b(section: PlannedBlock['section'], exerciseId: string, sets: number, reps: string, note?: string): PlannedBlock {
-  return { section, exerciseId, sets, reps, note };
+function b(
+  section: PlannedBlock['section'], exerciseId: string, sets: number, reps: string,
+  note?: string, tier: PlannedBlock['tier'] = 3,
+): PlannedBlock {
+  return { section, exerciseId, sets, reps, note, tier };
 }
 
-/** Build a session plan for a workout type, adapted to today's symptoms. */
-export function buildSession(type: WorkoutType, s: Symptoms): SessionPlan {
+/** Rough time cost of a block (minutes), including rests. */
+function blockMinutes(blk: PlannedBlock): number {
+  const superset = blk.note?.toLowerCase().includes('superset') ? 0.62 : 1;
+  switch (blk.section) {
+    case 'warmup': return blk.sets * 1.5;
+    case 'strength': return blk.sets * 2.6 * superset;
+    case 'core': return blk.sets * 1.3;
+    case 'conditioning': return blk.sets * 1.8 + 2;
+  }
+}
+
+export function estimateMinutes(blocks: PlannedBlock[]): number {
+  return Math.round(blocks.reduce((m, blk) => m + blockMinutes(blk), 3)); // +3 setup/transition
+}
+
+/** Build a session plan for a workout type, adapted to today's symptoms, time and layoff. */
+export function buildSession(type: WorkoutType, s: Symptoms, opts: SessionOptions = {}): SessionPlan {
+  const minutes = opts.minutes ?? 60;
+  const gapDays = opts.gapDays ?? 0;
+  const tierCap: PlannedBlock['tier'] = minutes >= 90 ? 4 : minutes >= 60 ? 3 : minutes >= 45 ? 2 : 1;
   const adaptations: string[] = [];
   let title = '';
   let blocks: PlannedBlock[] = [];
@@ -107,34 +138,38 @@ export function buildSession(type: WorkoutType, s: Symptoms): SessionPlan {
   if (type === 'strength-core') {
     title = 'Day 1 · Full Body Strength + Core';
     blocks = [
-      b('warmup', 'cat-cow', 1, '8 slow reps', 'Wake the spine up'),
-      b('warmup', 'glute-bridge', 2, '12 + 2s squeeze', 'Turn the glutes on'),
-      b('warmup', 'ankle-rock', 1, '10/side', 'Prep the knee'),
-      b('strength', 'barbell-back-squat', 3, '6–10', 'Main squat pattern'),
-      b('strength', 'dumbbell-bench-press', 3, '8–12', 'Superset with the row ↓'),
-      b('strength', 'seated-cable-row', 3, '10–12', 'Superset with the press ↑'),
-      b('strength', 'barbell-rdl', 3, '8–10', 'Glute + hamstring priority'),
-      b('strength', 'barbell-hip-thrust', 3, '8–12', 'Glute priority #1'),
-      b('strength', 'machine-bicep-curl', 3, '10–15', 'Bicep volume'),
-      b('core', 'mcgill-curl-up', 2, '10s holds ×5', 'McGill Big 3'),
-      b('core', 'side-plank', 2, '10s ×3 per side', 'McGill Big 3'),
-      b('core', 'bird-dog', 2, '10s ×5 per side', 'McGill Big 3'),
+      b('warmup', 'glute-bridge', 2, '12 + 2s squeeze', 'Turn the glutes on', 1),
+      b('warmup', 'cat-cow', 1, '8 slow reps', 'Wake the spine up', 2),
+      b('warmup', 'ankle-rock', 1, '10/side', 'Prep the knee', 3),
+      b('strength', 'barbell-back-squat', 3, '6–10', 'Main squat pattern', 1),
+      b('strength', 'dumbbell-bench-press', 3, '8–12', 'Superset with the row ↓', 1),
+      b('strength', 'seated-cable-row', 3, '10–12', 'Superset with the press ↑', 1),
+      b('strength', 'barbell-rdl', 3, '8–10', 'Glute + hamstring priority', 2),
+      b('strength', 'barbell-hip-thrust', 3, '8–12', 'Glute priority #1', 1),
+      b('strength', 'machine-bicep-curl', 3, '10–15', 'Bicep volume', 2),
+      b('strength', 'cable-pull-through', 2, '12–15', 'Bonus glute volume', 4),
+      b('strength', 'face-pull', 2, '12–15', 'Posture insurance', 4),
+      b('core', 'mcgill-curl-up', 2, '10s holds ×5', 'McGill Big 3', 1),
+      b('core', 'bird-dog', 2, '10s ×5 per side', 'McGill Big 3', 2),
+      b('core', 'side-plank', 2, '10s ×3 per side', 'McGill Big 3', 3),
     ];
   } else if (type === 'strength-conditioning') {
     title = 'Day 3 · Strength + Conditioning';
     blocks = [
-      b('warmup', 'cat-cow', 1, '8 slow reps'),
-      b('warmup', 'glute-bridge', 2, '12 + 2s squeeze', 'Wake the glutes before hinging'),
-      b('warmup', 'hip-flexor-stretch', 1, '30s/side', 'Undo the desk'),
-      b('strength', 'barbell-deadlift', 3, '4–6', 'Main hinge — crisp reps only'),
-      b('strength', 'seated-db-shoulder-press', 3, '8–12', 'Superset with the pulldown ↓'),
-      b('strength', 'lat-pulldown', 3, '8–12', 'Superset with the press ↑'),
-      b('strength', 'dumbbell-step-up', 3, '8–10/leg', 'Single-leg + glutes'),
-      b('strength', 'hammer-curl', 3, '10–12', 'Bicep width'),
-      b('strength', 'cable-tricep-pushdown', 2, '12–15', 'Arm balance'),
-      b('core', 'pallof-press', 2, '8/side', 'Anti-rotation'),
-      b('conditioning', 'suitcase-carry', 2, '30m/side', 'Core wall + grip'),
-      b('conditioning', 'tyre-push', 4, '20s hard / 90s rest', 'Engine work, zero impact'),
+      b('warmup', 'glute-bridge', 2, '12 + 2s squeeze', 'Wake the glutes before hinging', 1),
+      b('warmup', 'cat-cow', 1, '8 slow reps', undefined, 2),
+      b('warmup', 'hip-flexor-stretch', 1, '30s/side', 'Undo the desk', 3),
+      b('strength', 'barbell-deadlift', 3, '4–6', 'Main hinge — crisp reps only', 1),
+      b('strength', 'seated-db-shoulder-press', 3, '8–12', 'Superset with the pulldown ↓', 1),
+      b('strength', 'lat-pulldown', 3, '8–12', 'Superset with the press ↑', 1),
+      b('strength', 'dumbbell-step-up', 3, '8–10/leg', 'Single-leg + glutes', 2),
+      b('strength', 'hammer-curl', 3, '10–12', 'Bicep width', 2),
+      b('strength', 'cable-tricep-pushdown', 2, '12–15', 'Arm balance', 3),
+      b('strength', 'machine-bicep-curl', 2, '12–15', 'Bonus bicep volume', 4),
+      b('core', 'pallof-press', 2, '8/side', 'Anti-rotation', 2),
+      b('conditioning', 'suitcase-carry', 2, '30m/side', 'Core wall + grip', 3),
+      b('conditioning', 'tyre-push', 4, '20s hard / 90s rest', 'Engine work, zero impact', 3),
+      b('conditioning', 'spin-bike-z2', 1, '12–15 min easy spin', 'Extra engine, zero impact', 4),
     ];
   } else if (type === 'mobility') {
     title = 'Mobility Session';
@@ -151,6 +186,32 @@ export function buildSession(type: WorkoutType, s: Symptoms): SessionPlan {
   } else {
     title = 'Custom Workout';
     blocks = [];
+  }
+
+  // fit the available time
+  if (type === 'strength-core' || type === 'strength-conditioning') {
+    blocks = blocks.filter((blk) => blk.tier <= tierCap);
+    if (minutes < 45) {
+      blocks = blocks.map((blk) =>
+        blk.section === 'strength' && blk.sets > 2 ? { ...blk, sets: 2 } : blk,
+      );
+      adaptations.push(`${minutes}-minute session: essentials only — the main lift, one push–pull superset and glute work. Move briskly, rest ~90s.`);
+    } else if (minutes < 60) {
+      adaptations.push(`${minutes}-minute session: accessories trimmed, priorities kept. Supersets keep it moving.`);
+    } else if (minutes >= 90) {
+      adaptations.push('90-minute session: bonus glute/arm volume and extra conditioning added. Don\'t rush the rests.');
+    }
+  }
+
+  // ease back in after a layoff
+  if (gapDays >= 10 && (type === 'strength-core' || type === 'strength-conditioning')) {
+    blocks = blocks.map((blk) =>
+      blk.section === 'strength' && blk.sets > 2 ? { ...blk, sets: 2 } : blk,
+    );
+    blocks = blocks.filter((blk) => blk.section !== 'conditioning');
+    adaptations.push(`First session after ~${gapDays} days off: volume trimmed and conditioning dropped. Use the suggested (lighter) loads — soreness now would cost you the next session.`);
+  } else if (gapDays >= 4) {
+    adaptations.push(`${gapDays}-day gap — no problem. Normal plan, but leave 2 reps in the tank on everything; don't chase soreness.`);
   }
 
   // symptom gates
@@ -185,7 +246,7 @@ export function buildSession(type: WorkoutType, s: Symptoms): SessionPlan {
     adaptations.push('Reduced volume and dropped conditioning — energy is low. Quality over quantity today.');
   }
 
-  return { type, title, blocks, adaptations };
+  return { type, title, blocks, adaptations, estMinutes: estimateMinutes(blocks) };
 }
 
 /** Alternatives for the swap picker: same primary muscle, respecting gates. */

@@ -119,22 +119,27 @@ export async function ruleAnswer(q: string): Promise<string> {
     ].join('\n');
   }
 
-  // 30-minute workout
-  if (/30\s*(-|\s)?min|short (workout|session)|quick (workout|session)/.test(s)) {
+  // time-boxed workout: "I have 30/45/60/90 minutes", "short/quick workout"
+  const timeMatch = s.match(/(\d{2,3})\s*(?:-|\s)?min/);
+  if (timeMatch || /short (workout|session)|quick (workout|session)/.test(s)) {
+    const minutes = timeMatch ? Math.min(120, Math.max(20, parseInt(timeMatch[1], 10))) : 30;
     const sym = status.checkin
       ? { knee: status.checkin.knee, back: status.checkin.back, energy: status.checkin.energy }
       : { knee: 2, back: 3, energy: 7 };
-    const plan = buildSession(status.nextSession.type ?? 'strength-core', sym);
-    const picks = plan.blocks.filter((b) => b.section === 'strength').slice(0, 4);
+    const plan = buildSession(status.nextSession.type ?? 'strength-core', sym, { minutes });
     const exs = await db.exercises.toArray();
     const name = (id: string) => exs.find((e) => e.id === id)?.name ?? id;
+    const line = (sec: string, items: typeof plan.blocks) =>
+      items.length ? [`${sec}:`, ...items.map((p) => `• ${name(p.exerciseId)} — ${p.sets} × ${p.reps}${p.note?.includes('Superset') ? ' (superset)' : ''}`)] : [];
     return [
-      `30-minute version — superset pairs, rest ~60s:`,
-      `• 5 min: glute bridges ×12, cat–cow ×8, ankle rocks`,
-      ...picks.map((p, i) => `• ${name(p.exerciseId)} — ${Math.max(2, p.sets - 1)} × ${p.reps}${i % 2 === 1 ? ' (superset with the one above)' : ''}`),
-      `• Finish: McGill curl-up + side plank, 2 rounds`,
-      plan.adaptations.length ? `\nAdapted: ${plan.adaptations.join(' ')}` : '',
-      `\nStart Train → it will track it set by set.`,
+      `Here's your ${minutes}-minute ${plan.title} (est. ~${plan.estMinutes} min):`,
+      ``,
+      ...line('Warm-up', plan.blocks.filter((p) => p.section === 'warmup')),
+      ...line('Strength', plan.blocks.filter((p) => p.section === 'strength')),
+      ...line('Core', plan.blocks.filter((p) => p.section === 'core')),
+      ...line('Conditioning', plan.blocks.filter((p) => p.section === 'conditioning')),
+      plan.adaptations.length ? `\n${plan.adaptations.join(' ')}` : '',
+      `\nTap Train and pick ${minutes} min at the check-in — it builds and tracks exactly this.`,
     ].filter(Boolean).join('\n');
   }
 

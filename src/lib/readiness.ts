@@ -43,6 +43,8 @@ export interface DayStatus {
   checkin?: Checkin;
   readiness?: Readiness;
   streak: number;
+  /** days since the last logged workout or run (0 = trained today, null = no history) */
+  gapDays: number | null;
   kneeAvg7: number | null;
   backAvg7: number | null;
   kneeTrend: 'up' | 'down' | 'flat';
@@ -73,6 +75,13 @@ export async function computeDayStatus(): Promise<DayStatus> {
   let streak = 0;
   let cursor = engaged.has(today) ? 0 : 1;
   while (engaged.has(daysAgoStr(cursor))) { streak += 1; cursor += 1; }
+
+  // days since last actual training (workout or run)
+  let gapDays: number | null = null;
+  if (activity.size > 0) {
+    const lastActive = [...activity].sort().pop()!;
+    gapDays = Math.max(0, Math.floor((Date.now() - new Date(lastActive + 'T12:00:00').getTime()) / 86400000));
+  }
 
   // 7-day symptom trends (check-ins + pre-workout/pre-run reports)
   const [workouts, runs] = await Promise.all([db.workouts.toArray(), db.runs.toArray()]);
@@ -131,7 +140,7 @@ export async function computeDayStatus(): Promise<DayStatus> {
   }
 
   return {
-    checkin, readiness, streak, kneeAvg7, backAvg7,
+    checkin, readiness, streak, gapDays, kneeAvg7, backAvg7,
     kneeTrend: trend(kneeAvg7, kneePrevAvg),
     backTrend: trend(backAvg7, backPrevAvg),
     nextSession,
