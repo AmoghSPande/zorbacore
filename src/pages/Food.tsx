@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, daysAgoStr, getProfile, todayStr } from '../db';
+import { db, daysAgoStr, getProfile } from '../db';
 import type { Meal, MealSlot, Profile } from '../types';
 import { FOODS, type FoodItem } from '../data/foods';
 import BackLink from '../components/BackLink';
@@ -17,14 +17,16 @@ const SLOTS: { id: MealSlot; label: string; emoji: string }[] = [
 export default function Food() {
   const [adding, setAdding] = useState<MealSlot | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const today = todayStr();
+  const [dayOffset, setDayOffset] = useState(0); // 0 = today, 1 = yesterday…
   const since = daysAgoStr(6);
   const meals = useLiveQuery(() => db.meals.where('date').aboveOrEqual(since).toArray(), []) ?? [];
   useEffect(() => { getProfile().then(setProfile); }, []);
 
-  const todayMeals = meals.filter((m) => m.date === today);
-  const kcal = Math.round(todayMeals.reduce((a, m) => a + m.kcal, 0));
-  const protein = Math.round(todayMeals.reduce((a, m) => a + (m.protein ?? 0), 0));
+  const day = daysAgoStr(dayOffset);
+  const dayLabel = dayOffset === 0 ? 'Today' : dayOffset === 1 ? 'Yesterday' : day;
+  const dayMeals = meals.filter((m) => m.date === day);
+  const kcal = Math.round(dayMeals.reduce((a, m) => a + m.kcal, 0));
+  const protein = Math.round(dayMeals.reduce((a, m) => a + (m.protein ?? 0), 0));
   const kcalTarget = profile?.calorieTarget;
   const proteinTarget = profile?.proteinTarget;
 
@@ -48,12 +50,19 @@ export default function Food() {
         </div>
       </div>
 
-      {/* today totals */}
+      {/* day switcher — view or fix past days too */}
+      <div className="row-between card pad-sm">
+        <button className="btn sm ghost" disabled={dayOffset >= 6} onClick={() => setDayOffset(dayOffset + 1)}>‹</button>
+        <span style={{ fontWeight: 700, fontSize: '0.92rem' }}>{dayLabel}</span>
+        <button className="btn sm ghost" disabled={dayOffset === 0} onClick={() => setDayOffset(dayOffset - 1)}>›</button>
+      </div>
+
+      {/* day totals */}
       <div className="card">
         <div className="grid-2">
           <div className="stat">
             <span className="v">{kcal}<small>{kcalTarget ? ` / ${kcalTarget}` : ''} kcal</small></span>
-            <span className="k">today</span>
+            <span className="k">{dayLabel.toLowerCase()}</span>
           </div>
           <div className="stat">
             <span className="v">{protein}<small>{proteinTarget ? ` / ${proteinTarget}` : ''} g</small></span>
@@ -77,7 +86,7 @@ export default function Food() {
 
       {/* meals by slot */}
       {SLOTS.map((slot) => {
-        const items = todayMeals.filter((m) => m.meal === slot.id);
+        const items = dayMeals.filter((m) => m.meal === slot.id);
         const slotKcal = Math.round(items.reduce((a, m) => a + m.kcal, 0));
         return (
           <div key={slot.id} className="card pad-sm">
@@ -114,12 +123,12 @@ export default function Food() {
         </div>
       )}
 
-      {adding && <AddMeal slot={adding} meals={meals} onClose={() => setAdding(null)} />}
+      {adding && <AddMeal slot={adding} date={day} meals={meals} onClose={() => setAdding(null)} />}
     </div>
   );
 }
 
-function AddMeal({ slot, meals, onClose }: { slot: MealSlot; meals: Meal[]; onClose: () => void }) {
+function AddMeal({ slot, date, meals, onClose }: { slot: MealSlot; date: string; meals: Meal[]; onClose: () => void }) {
   const [q, setQ] = useState('');
   const [picked, setPicked] = useState<FoodItem | null>(null);
   const [qty, setQty] = useState(1);
@@ -142,12 +151,12 @@ function AddMeal({ slot, meals, onClose }: { slot: MealSlot; meals: Meal[]; onCl
   const save = async () => {
     if (picked) {
       await db.meals.add({
-        date: todayStr(), meal: slot, name: picked.name, foodId: picked.id,
+        date, meal: slot, name: picked.name, foodId: picked.id,
         qty, kcal: picked.kcal * qty, protein: picked.protein * qty, at: Date.now(),
       });
     } else if (customName.trim() && customKcal > 0) {
       await db.meals.add({
-        date: todayStr(), meal: slot, name: customName.trim(), qty: 1, kcal: customKcal, at: Date.now(),
+        date, meal: slot, name: customName.trim(), qty: 1, kcal: customKcal, at: Date.now(),
       });
     } else return;
     if (navigator.vibrate) navigator.vibrate(20);

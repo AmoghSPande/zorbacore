@@ -119,7 +119,8 @@ export async function exportAll(): Promise<string> {
 
 export async function importAll(json: string): Promise<void> {
   const data = JSON.parse(json);
-  if (data.app !== 'hybridcoach') throw new Error('Not a HybridCoach backup file');
+  // 'hybridcoach' is the legacy on-disk marker — kept so older backups still import.
+  if (data.app !== 'hybridcoach') throw new Error('Not a Zorbacore backup file');
   const tables = BACKUP_TABLES.map((t) => db.table(t));
   await db.transaction('rw', tables, async () => {
     for (const t of BACKUP_TABLES) {

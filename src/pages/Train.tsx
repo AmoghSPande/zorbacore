@@ -116,6 +116,7 @@ export default function Train() {
 
 function StartScreen({ onStart }: { onStart: (t: WorkoutType, planId?: string) => void }) {
   const [showPlanEditor, setShowPlanEditor] = useState(false);
+  const [detailId, setDetailId] = useState<number | null>(null);
   const myPlans = useLiveQuery(() => db.plans.toArray(), []) ?? [];
   const recent = useLiveQuery(
     () => db.workouts.orderBy('date').reverse().limit(5).toArray(),
@@ -188,7 +189,7 @@ function StartScreen({ onStart }: { onStart: (t: WorkoutType, planId?: string) =
         <div className="card pad-sm">
           <div className="card-title">Recent workouts</div>
           {recent.map((w) => (
-            <div key={w.id} className="li">
+            <button key={w.id} className="li" style={{ width: '100%', textAlign: 'left' }} onClick={() => setDetailId(w.id!)}>
               <div className="li-main">
                 <div className="li-title">{typeLabel(w.type)}</div>
                 <div className="li-sub">
@@ -196,12 +197,100 @@ function StartScreen({ onStart }: { onStart: (t: WorkoutType, planId?: string) =
                   {w.endedAt ? ` · ${fmtDuration(w.endedAt - w.startedAt)}` : ' · in progress'}
                 </div>
               </div>
-            </div>
+              <div className="li-end" style={{ color: 'var(--text-faint)' }}>›</div>
+            </button>
           ))}
         </div>
       )}
+
+      {detailId != null && <WorkoutDetail workoutId={detailId} onClose={() => setDetailId(null)} />}
     </div>
   );
+}
+
+/** History detail: review a past workout, fix a mislogged set, or delete the whole session. */
+function WorkoutDetail({ workoutId, onClose }: { workoutId: number; onClose: () => void }) {
+  const workout = useLiveQuery(() => db.workouts.get(workoutId), [workoutId]);
+  const exercises = useLiveQuery(() => db.exercises.toArray(), []) ?? [];
+  const [confirmDel, setConfirmDel] = useState(false);
+  if (!workout) return null;
+  const exMap = new Map(exercises.map((e) => [e.id, e]));
+
+  const groups: { exerciseId: string; entries: { set: SetLog; idx: number }[] }[] = [];
+  workout.sets.forEach((set, idx) => {
+    const g = groups.find((x) => x.exerciseId === set.exerciseId);
+    if (g) g.entries.push({ set, idx });
+    else groups.push({ exerciseId: set.exerciseId, entries: [{ set, idx }] });
+  });
+
+  const deleteSet = (idx: number) =>
+    db.workouts.update(workoutId, { sets: workout.sets.filter((_, i) => i !== idx) });
+
+  const deleteWorkout = async () => {
+    // remove PRs credited to this session so records stay honest
+    const exIds = new Set(workout.sets.map((s) => s.exerciseId));
+    await db.prs.where('date').equals(workout.date).filter((p) => exIds.has(p.exerciseId)).delete();
+    await db.workouts.delete(workoutId);
+    onClose();
+  };
+
+  return (
+    <div className="modal-back" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h2>{typeLabel(workout.type)}</h2>
+        <div className="tag-note" style={{ marginTop: -6 }}>
+          {workout.date}
+          {workout.endedAt ? ` · ${fmtDuration(workout.endedAt - workout.startedAt)}` : ' · in progress'}
+          {` · ${workout.sets.length} sets`}
+        </div>
+
+        {groups.length === 0 && <div className="tag-note">No sets were logged in this session.</div>}
+        {groups.map((g) => {
+          const ex = exMap.get(g.exerciseId);
+          const timed = ex?.loadType === 'time';
+          return (
+            <div key={g.exerciseId} className="card pad-sm">
+              <div className="li-title" style={{ fontSize: '0.9rem', marginBottom: 4 }}>{ex?.name ?? g.exerciseId}</div>
+              {g.entries.map(({ set, idx }, n) => (
+                <div key={idx} className="row-between" style={{ fontSize: '0.86rem', padding: '3px 0' }}>
+                  <span style={{ color: 'var(--text-dim)' }}>Set {n + 1}</span>
+                  <span style={{ fontWeight: 650 }}>
+                    {set.weightKg > 0 ? `${set.weightKg}kg × ` : ''}{set.reps}{timed ? 's' : ''}
+                    {set.rpe ? <span style={{ color: 'var(--text-faint)' }}> @{set.rpe}</span> : null}
+                  </span>
+                  <button className="btn sm ghost" aria-label="Delete set" onClick={() => deleteSet(idx)}>✕</button>
+                </div>
+              ))}
+            </div>
+          );
+        })}
+
+        {!confirmDel ? (
+          <button className="btn danger" onClick={() => setConfirmDel(true)}>Delete this workout…</button>
+        ) : (
+          <div className="row">
+            <button className="btn danger grow" onClick={deleteWorkout}>Yes, delete it</button>
+            <button className="btn grow" onClick={() => setConfirmDel(false)}>Keep it</button>
+          </div>
+        )}
+        <button className="btn ghost" onClick={onClose}>Close</button>
+      </div>
+    </div>
+  );
+}
+
+/** Plates per side for a 20 kg bar, e.g. 100 → "20 kg bar + 20 + 15 + 5 per side". */
+function plateBreakdown(total: number): string | null {
+  const BAR = 20;
+  if (total < BAR) return null;
+  if (total === BAR) return 'empty 20 kg bar';
+  let per = (total - BAR) / 2;
+  const plates: number[] = [];
+  for (const p of [20, 15, 10, 5, 2.5, 1.25]) {
+    while (per >= p - 1e-9) { plates.push(p); per -= p; }
+  }
+  if (per > 1e-9) return null; // not loadable with standard plates
+  return `20 kg bar + ${plates.join(' + ')} per side`;
 }
 
 export function typeLabel(t: WorkoutType): string {
@@ -467,6 +556,7 @@ function ExerciseCard({
   const [rpe, setRpe] = useState<number | undefined>();
   const [showSwap, setShowSwap] = useState(false);
   const [swapped, setSwapped] = useState<Exercise | null>(null);
+  const [holdKey, setHoldKey] = useState<number | null>(null);
   const activeEx = swapped ?? ex;
 
   // best-ever for this exercise (weight/e1RM PR, or reps for bodyweight)
@@ -501,6 +591,9 @@ function ExerciseCard({
   const logNow = () => {
     onLog(activeEx.id, { weightKg: isBw ? 0 : weight, reps, rpe }, restDefault);
   };
+
+  const isBarbell = activeEx.equipment.includes('barbell');
+  const plates = !isBw && isBarbell ? plateBreakdown(weight) : null;
 
   return (
     <div className="card pad-sm" style={done ? { borderColor: 'var(--accent)' } : {}}>
@@ -565,6 +658,26 @@ function ExerciseCard({
               <Stepper value={reps} onChange={setReps} step={isTimed ? 5 : 1} min={1} />
             </label>
           </div>
+
+          {plates && (
+            <div className="tag-note">🏋️ Load the bar: {plates}</div>
+          )}
+
+          {isTimed && (
+            holdKey != null ? (
+              <div className="row" style={{ gap: 10 }}>
+                <span className="tag-note" style={{ flexShrink: 0 }}>Hold</span>
+                <div className="grow">
+                  <RestTimer key={holdKey} seconds={reps} onDone={() => { setHoldKey(null); logNow(); }} />
+                </div>
+                <button className="btn sm ghost" onClick={() => setHoldKey(null)}>Cancel</button>
+              </div>
+            ) : (
+              <button className="btn" onClick={() => setHoldKey(Date.now())}>
+                ⏱ Time the {reps}s hold — logs itself when done
+              </button>
+            )
+          )}
 
           <div>
             <span style={{ display: 'block', fontSize: '0.78rem', fontWeight: 600, color: 'var(--text-dim)', marginBottom: 5 }}>RPE (how hard?)</span>

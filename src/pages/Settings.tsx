@@ -106,7 +106,7 @@ export default function Settings() {
     const blob = new Blob([json], { type: 'application/json' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `hybridcoach-backup-${new Date().toISOString().slice(0, 10)}.json`;
+    a.download = `zorbacore-backup-${new Date().toISOString().slice(0, 10)}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
   };
@@ -314,7 +314,7 @@ export default function Settings() {
       </div>
 
       <div className="tag-note" style={{ textAlign: 'center' }}>
-        HybridCoach · your data stays on this device, plus your own private cloud space if you sign in
+        Zorbacore · your data stays on this device, plus your own private cloud space if you sign in
       </div>
     </div>
   );
