@@ -6,6 +6,32 @@ import { cloudEnabled, signInGoogle, useCloud } from '../lib/cloud';
 import { Stepper } from '../components/inputs';
 import ExerciseAnim from '../components/ExerciseAnim';
 
+function Grad({ children }: { children: React.ReactNode }) {
+  return (
+    <span style={{
+      background: 'linear-gradient(100deg, var(--accent), var(--run) 90%)',
+      WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
+    }}>
+      {children}
+    </span>
+  );
+}
+
+function StepHead({ n, title, sub }: { n: number; title: React.ReactNode; sub?: string }) {
+  return (
+    <div style={{ marginTop: '2dvh', marginBottom: 4 }}>
+      <div style={{
+        fontSize: '0.68rem', fontWeight: 700, letterSpacing: '0.24em',
+        color: 'var(--text-faint)', textTransform: 'uppercase', marginBottom: 10,
+      }}>
+        Step {n} of 5
+      </div>
+      <h1 style={{ fontSize: 'clamp(1.7rem, 7vw, 2.1rem)', lineHeight: 1.12, letterSpacing: '-0.025em' }}>{title}</h1>
+      {sub && <p style={{ marginTop: 10, color: 'var(--text-dim)', fontSize: '0.92rem', maxWidth: 340 }}>{sub}</p>}
+    </div>
+  );
+}
+
 function GoogleG() {
   return (
     <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
@@ -83,10 +109,10 @@ export default function Onboarding() {
     <div className="page" style={{ minHeight: '100dvh', paddingBottom: 24 }}>
       <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 14, minHeight: '85dvh' }}>
 
+        {/* backdrop: deep vignette (all steps) + faint runner (welcome only) */}
+        <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: -1, background: 'radial-gradient(120% 65% at 50% 0%, #0c1320 0%, #070b11 55%, #04060a 100%)' }} />
         {step === 0 && (
           <>
-            {/* backdrop: deep vignette + faint runner */}
-            <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: -1, background: 'radial-gradient(120% 65% at 50% 0%, #0c1320 0%, #070b11 55%, #04060a 100%)' }} />
             <div aria-hidden style={{ position: 'fixed', right: '-24%', bottom: '4%', width: '95%', opacity: 0.07, zIndex: -1, pointerEvents: 'none' }}>
               <ExerciseAnim animId="run-gait" />
             </div>
@@ -159,7 +185,7 @@ export default function Onboarding() {
 
         {step === 1 && (
           <>
-            <h1>First, the basics</h1>
+            <StepHead n={1} title={<>First, the <Grad>basics.</Grad></>} />
             <label className="field">
               <span className="lbl">What should your coach call you?</span>
               <input className="input" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
@@ -174,8 +200,11 @@ export default function Onboarding() {
 
         {step === 2 && (
           <>
-            <h1>Anything your coach should protect?</h1>
-            <p className="tag-note">Workouts adapt automatically around these — swapping exercises and adjusting intensity when symptoms rise.</p>
+            <StepHead
+              n={2}
+              title={<>Anything your coach should <Grad>protect?</Grad></>}
+              sub="Workouts adapt automatically around these — swapping exercises and easing intensity when symptoms rise."
+            />
             <div className="card">
               <div className="card-title">Knee trouble (pain, past injury, cartilage issues)?</div>
               <div className="row">
@@ -200,8 +229,11 @@ export default function Onboarding() {
 
         {step === 3 && (
           <>
-            <h1>How do you want to train?</h1>
-            <p className="tag-note">This shapes every session the coach builds. You can change it anytime in Settings.</p>
+            <StepHead
+              n={3}
+              title={<>How do you want to <Grad>train?</Grad></>}
+              sub="This shapes every session the coach builds — change it anytime in Settings."
+            />
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {(Object.keys(STYLES) as TrainingStyle[]).map((id) => (
                 <button
@@ -225,7 +257,7 @@ export default function Onboarding() {
 
         {step === 4 && (
           <>
-            <h1>Your targets</h1>
+            <StepHead n={4} title={<>Set your <Grad>targets.</Grad></>} />
             <label className="field">
               <span className="lbl">Target body weight (kg) — optional, guides the fat-loss dashboard</span>
               <Stepper value={targetWeightKg} onChange={setTargetWeightKg} step={0.5} />
@@ -249,7 +281,7 @@ export default function Onboarding() {
 
         {step === 5 && (
           <>
-            <h1>Ready, {name.trim() || 'athlete'} 👊</h1>
+            <StepHead n={5} title={<>Ready, <Grad>{name.trim() || 'athlete'}.</Grad> 👊</>} />
             <div className="card">
               <div className="card-title">Your space is set up with</div>
               <ul style={{ paddingLeft: 18, display: 'flex', flexDirection: 'column', gap: 6, fontSize: '0.92rem' }}>
