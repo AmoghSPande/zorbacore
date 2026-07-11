@@ -4,6 +4,18 @@ import type { TrainingStyle } from '../types';
 import { STYLES } from '../lib/coach';
 import { cloudEnabled, signInGoogle, useCloud } from '../lib/cloud';
 import { Stepper } from '../components/inputs';
+import ExerciseAnim from '../components/ExerciseAnim';
+
+function GoogleG() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 48 48" aria-hidden>
+      <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z" />
+      <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z" />
+      <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z" />
+      <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z" />
+    </svg>
+  );
+}
 
 /**
  * First-run intake. Shown until profile.onboarded is true.
@@ -73,32 +85,75 @@ export default function Onboarding() {
 
         {step === 0 && (
           <>
-            <div style={{ textAlign: 'center', marginTop: '8dvh' }}>
-              <img src="/icon.svg" alt="" width={84} height={84} style={{ borderRadius: 22 }} />
-              <h1 style={{ fontSize: '1.7rem', marginTop: 14 }}>Your personal training space</h1>
-              <p className="sub" style={{ marginTop: 8, color: 'var(--text-dim)' }}>
-                Strength, running, mobility and recovery — coached around <i>your</i> body,
-                your goals and how you feel each day. Everything you record is private to you.
-              </p>
+            {/* backdrop: deep vignette + faint runner */}
+            <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: -1, background: 'radial-gradient(120% 65% at 50% 0%, #0c1320 0%, #070b11 55%, #04060a 100%)' }} />
+            <div aria-hidden style={{ position: 'fixed', right: '-24%', bottom: '4%', width: '95%', opacity: 0.07, zIndex: -1, pointerEvents: 'none' }}>
+              <ExerciseAnim animId="run-gait" />
             </div>
-            {cloudEnabled && !cloud.user && (
-              <button className="btn big" style={{ marginTop: '4dvh' }} disabled={!cloud.ready}
-                onClick={async () => { setSignErr(null); try { await signInGoogle(); } catch (e) { setSignErr((e as Error).message); } }}>
-                Continue with Google · syncs across your devices
-              </button>
-            )}
-            {cloud.user && (
-              <div className="card pad-sm" style={{ textAlign: 'center', borderColor: 'var(--accent)' }}>
-                Signed in as <b>{cloud.user.email}</b> — your space will follow you on any device.
+
+            {/* wordmark */}
+            <div className="row" style={{ justifyContent: 'center', gap: 10, marginTop: '4dvh' }}>
+              <img src="/icon.svg" alt="" width={30} height={30} style={{ borderRadius: 9 }} />
+              <span style={{
+                fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.95rem',
+                letterSpacing: '0.34em', textTransform: 'uppercase', color: 'var(--text-dim)',
+              }}>
+                Zorbacore
+              </span>
+            </div>
+
+            {/* hero */}
+            <div style={{ marginTop: '9dvh' }}>
+              <h1 style={{ fontSize: 'clamp(2.1rem, 9vw, 2.7rem)', lineHeight: 1.08, letterSpacing: '-0.03em' }}>
+                Train for the
+                <br />
+                <span style={{
+                  background: 'linear-gradient(100deg, var(--accent), var(--run) 90%)',
+                  WebkitBackgroundClip: 'text', backgroundClip: 'text', color: 'transparent',
+                }}>
+                  body you want.
+                </span>
+              </h1>
+              <p style={{ marginTop: 14, color: 'var(--text-dim)', fontSize: '0.95rem', maxWidth: 320 }}>
+                A coach that adapts every session to your joints, your goals,
+                your time — and celebrates every record with you.
+              </p>
+              <div className="row" style={{ marginTop: 18, gap: 6, flexWrap: 'wrap' }}>
+                {['Strength', 'Running', 'Yoga', 'Habits', 'Nutrition'].map((t) => (
+                  <span key={t} style={{
+                    fontSize: '0.72rem', fontWeight: 650, letterSpacing: '0.05em',
+                    color: 'var(--text-faint)', border: '1px solid var(--border)',
+                    borderRadius: 999, padding: '5px 11px',
+                  }}>
+                    {t}
+                  </span>
+                ))}
               </div>
-            )}
-            {signErr && <div className="tag-note" style={{ color: 'var(--danger)', textAlign: 'center' }}>{signErr}</div>}
-            <Nav nextLabel="Set up my space" />
-            {cloudEnabled && !cloud.user && (
-              <div className="tag-note" style={{ textAlign: 'center' }}>
-                You can also continue without an account — your data then lives only on this device.
+            </div>
+
+            {/* actions */}
+            <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 24 }}>
+              {cloud.user && (
+                <div className="card pad-sm" style={{ textAlign: 'center', borderColor: 'color-mix(in srgb, var(--accent) 45%, transparent)' }}>
+                  Signed in as <b>{cloud.user.email}</b> — your space follows you on any device.
+                </div>
+              )}
+              <button className="btn primary big" onClick={() => setStep(1)}>Set up my space</button>
+              {cloudEnabled && !cloud.user && (
+                <button
+                  className="btn big"
+                  style={{ background: 'var(--surface-2)', gap: 10 }}
+                  disabled={!cloud.ready}
+                  onClick={async () => { setSignErr(null); try { await signInGoogle(); } catch (e) { setSignErr((e as Error).message); } }}
+                >
+                  <GoogleG /> Continue with Google
+                </button>
+              )}
+              {signErr && <div className="tag-note" style={{ color: 'var(--danger)', textAlign: 'center' }}>{signErr}</div>}
+              <div className="tag-note" style={{ textAlign: 'center', fontSize: '0.76rem', color: 'var(--text-faint)' }}>
+                Private by design — sign in to sync across devices, or use it on this device only.
               </div>
-            )}
+            </div>
           </>
         )}
 
