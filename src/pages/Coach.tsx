@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { db, weekStart, todayStr } from '../db';
+import { db, daysAgoStr, weekStart, todayStr } from '../db';
 import { ROUTINES, type Routine } from '../data/mobility';
 import { weeklyVolumes, type WeekVolume } from '../lib/stats';
 import { computeDayStatus, type DayStatus } from '../lib/readiness';
@@ -88,6 +88,8 @@ export default function Coach() {
           </div>
         )}
       </div>
+
+      <WeeklyReview />
 
       {/* priorities */}
       {vol && (
@@ -176,6 +178,109 @@ export default function Coach() {
       </div>
 
       {playing && <MobilityPlayer routine={playing} onClose={() => setPlaying(null)} />}
+    </div>
+  );
+}
+
+// ---------------- weekly review ----------------
+
+/** Honest last-7-days summary with one concrete focus for next week. */
+function WeeklyReview() {
+  const since = daysAgoStr(6);
+  const prevSince = daysAgoStr(13);
+  const exercises = useLiveQuery(() => db.exercises.toArray(), []) ?? [];
+  const workouts = useLiveQuery(() => db.workouts.where('date').aboveOrEqual(since).toArray(), []) ?? [];
+  const runs = useLiveQuery(() => db.runs.where('date').aboveOrEqual(since).toArray(), []) ?? [];
+  const habits = useLiveQuery(() => db.habits.toArray(), []) ?? [];
+  const habitLogs = useLiveQuery(() => db.habitLogs.where('date').aboveOrEqual(since).toArray(), []) ?? [];
+  const meals = useLiveQuery(() => db.meals.where('date').aboveOrEqual(since).toArray(), []) ?? [];
+  const checkins = useLiveQuery(() => db.checkins.where('date').aboveOrEqual(prevSince).toArray(), []) ?? [];
+  const metrics = useLiveQuery(() => db.bodyMetrics.orderBy('date').reverse().limit(20).toArray(), []) ?? [];
+  const profile = useLiveQuery(() => db.profile.get('me'), []);
+
+  const exMap = new Map(exercises.map((e) => [e.id, e]));
+  const finished = workouts.filter((w) => w.endedAt);
+  const strengthN = finished.filter((w) => w.type === 'strength-core' || w.type === 'strength-conditioning' || w.type === 'custom').length;
+  const totalSets = finished.reduce((n, w) => n + w.sets.length, 0);
+  const gluteSets = finished.reduce((n, w) => n + w.sets.filter((s) => exMap.get(s.exerciseId)?.gluteFocus).length, 0);
+  const km = Math.round(runs.reduce((a, r) => a + r.distanceKm, 0) * 10) / 10;
+
+  // a habit log's existence means it was done that day
+  const habitPct = habits.length ? Math.round((habitLogs.length / (habits.length * 7)) * 100) : null;
+
+  const kcalByDay = new Map<string, number>();
+  for (const m of meals) kcalByDay.set(m.date, (kcalByDay.get(m.date) ?? 0) + m.kcal);
+  const kcalAvg = kcalByDay.size ? Math.round([...kcalByDay.values()].reduce((a, b) => a + b, 0) / kcalByDay.size) : null;
+
+  const weights = metrics.filter((m) => m.weightKg != null);
+  const latestW = weights[0];
+  const weekAgoW = weights.find((m) => m.date <= since);
+  const wDelta = latestW && weekAgoW && latestW.date > weekAgoW.date
+    ? Math.round((latestW.weightKg! - weekAgoW.weightKg!) * 10) / 10
+    : null;
+
+  const thisWeekC = checkins.filter((c) => c.date >= since);
+  const prevWeekC = checkins.filter((c) => c.date < since);
+  const avg = (xs: number[]) => (xs.length ? xs.reduce((a, b) => a + b, 0) / xs.length : null);
+  const backNow = avg(thisWeekC.map((c) => c.back ?? 0).filter((v) => v > 0));
+  const backPrev = avg(prevWeekC.map((c) => c.back ?? 0).filter((v) => v > 0));
+  const kneeNow = avg(thisWeekC.map((c) => c.knee ?? 0).filter((v) => v > 0));
+  const kneePrev = avg(prevWeekC.map((c) => c.knee ?? 0).filter((v) => v > 0));
+
+  // nothing meaningful yet → stay quiet rather than show a wall of zeros
+  if (finished.length === 0 && runs.length === 0) return null;
+
+  const style = profile?.trainingStyle ?? 'hybrid';
+  const runsMatter = style === 'hybrid' || style === 'trek';
+  let focus: string;
+  if (backNow != null && backPrev != null && backNow - backPrev >= 1) {
+    focus = 'Back stiffness crept up this week — make the McGill Big 3 a daily non-negotiable and keep hinges light.';
+  } else if (kneeNow != null && kneePrev != null && kneeNow - kneePrev >= 1) {
+    focus = 'The knee grumbled more than last week — bike over runs for a few days and skip deep knee-bend work.';
+  } else if (strengthN < 2) {
+    focus = 'Aim for two strength sessions next week — even 30-minute versions count.';
+  } else if (gluteSets < 10 && style !== 'yoga') {
+    focus = `Glutes landed at ${gluteSets} sets (target 10–20) — add hip thrusts or bridges to each session.`;
+  } else if (runsMatter && km === 0) {
+    focus = 'No runs this week — one easy 20-minute run or brisk walk keeps the engine ticking.';
+  } else if (habitPct != null && habitPct < 50) {
+    focus = 'Habits slipped below half — pick the single most important one and protect just that next week.';
+  } else {
+    focus = 'Solid week — keep the same rhythm and nudge one main lift up a notch.';
+  }
+
+  const trendTxt = (now: number | null, prev: number | null) =>
+    now == null ? '—' : prev == null ? now.toFixed(1) : `${prev.toFixed(1)} → ${now.toFixed(1)}`;
+
+  return (
+    <div className="card">
+      <div className="card-title">Your week in review</div>
+      <div className="grid-3">
+        <div className="stat"><span className="v">{strengthN}</span><span className="k">sessions</span></div>
+        <div className="stat"><span className="v">{totalSets}</span><span className="k">sets</span></div>
+        <div className="stat"><span className="v">{km}<small>km</small></span><span className="k">running</span></div>
+      </div>
+      <div className="divider" />
+      <div className="grid-3">
+        <div className="stat">
+          <span className="v" style={{ color: gluteSets >= 10 ? 'var(--accent)' : undefined }}>{gluteSets}<small>/10–20</small></span>
+          <span className="k">glute sets</span>
+        </div>
+        <div className="stat"><span className="v">{habitPct != null ? `${habitPct}%` : '—'}</span><span className="k">habits</span></div>
+        <div className="stat">
+          <span className="v">{kcalAvg ?? '—'}{kcalAvg && profile?.calorieTarget ? <small>/{profile.calorieTarget}</small> : null}</span>
+          <span className="k">kcal avg</span>
+        </div>
+      </div>
+      <div className="divider" />
+      <div className="row-between" style={{ fontSize: '0.84rem' }}>
+        <span className="tag-note">Weight {wDelta != null ? (wDelta > 0 ? `+${wDelta} kg` : `${wDelta} kg`) : '—'}</span>
+        <span className="tag-note">Back {trendTxt(backNow, backPrev)}</span>
+        <span className="tag-note">Knee {trendTxt(kneeNow, kneePrev)}</span>
+      </div>
+      <div className="card pad-sm" style={{ marginTop: 10, background: 'var(--surface-2)' }}>
+        <span style={{ fontSize: '0.86rem' }}>🎯 <b>Next week:</b> {focus}</span>
+      </div>
     </div>
   );
 }

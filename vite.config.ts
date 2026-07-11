@@ -6,12 +6,12 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      registerType: 'autoUpdate',
+      registerType: 'prompt',
       includeAssets: ['icon.svg', 'apple-touch-icon.png'],
       manifest: {
-        name: 'HybridCoach',
-        short_name: 'HybridCoach',
-        description: 'Personal hybrid-athlete coach: strength, running, mobility, recovery.',
+        name: 'Zorbacore',
+        short_name: 'Zorbacore',
+        description: 'Your personal training space: strength, running, mobility, recovery.',
         theme_color: '#0b0f14',
         background_color: '#0b0f14',
         display: 'standalone',

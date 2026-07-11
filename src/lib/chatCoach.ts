@@ -215,7 +215,7 @@ export async function llmAnswer(q: string, apiKey: string, history: { role: stri
     body: JSON.stringify({
       model: 'claude-sonnet-5',
       max_tokens: 700,
-      system: `You are HybridCoach, a concise personal trainer + running coach + physio-minded advisor inside a training app. Ground every answer in the athlete data below. Respect the right-knee chondromalacia and lower-back constraints in every recommendation. Only recommend equipment from the list. Be encouraging, specific and brief (under 250 words). Data:\n\n${context}`,
+      system: `You are Zorbacore, a concise personal trainer + running coach + physio-minded advisor inside a training app. Ground every answer in the athlete data below. Respect the right-knee chondromalacia and lower-back constraints in every recommendation. Only recommend equipment from the list. Be encouraging, specific and brief (under 250 words). Data:\n\n${context}`,
       messages: [
         ...history.slice(-6).map((m) => ({ role: m.role === 'coach' ? 'assistant' : 'user', content: m.content })),
         { role: 'user', content: q },

@@ -12,6 +12,7 @@ import { Scale10, Stepper } from '../components/inputs';
 export default function RunPage() {
   const [stats, setStats] = useState<RunStats | null>(null);
   const [logging, setLogging] = useState(false);
+  const [confirmDel, setConfirmDel] = useState<number | null>(null);
   const runs = useLiveQuery(() => db.runs.orderBy('date').reverse().limit(10).toArray(), []) ?? [];
 
   useEffect(() => {
@@ -119,7 +120,17 @@ export default function RunPage() {
                   {r.preKnee != null && r.preKnee >= 4 ? ` · knee ${r.preKnee}/10` : ''}
                 </div>
               </div>
-              <div className="li-end" style={{ color: 'var(--run)', fontWeight: 700 }}>{fmtPace(paceSecPerKm(r))}</div>
+              {confirmDel === r.id ? (
+                <div className="row" style={{ gap: 6 }}>
+                  <button className="btn sm danger" onClick={() => { db.runs.delete(r.id!); setConfirmDel(null); }}>Delete</button>
+                  <button className="btn sm ghost" onClick={() => setConfirmDel(null)}>Keep</button>
+                </div>
+              ) : (
+                <>
+                  <div className="li-end" style={{ color: 'var(--run)', fontWeight: 700 }}>{fmtPace(paceSecPerKm(r))}</div>
+                  <button className="btn sm ghost" aria-label="Delete run" onClick={() => setConfirmDel(r.id!)}>✕</button>
+                </>
+              )}
             </div>
           ))}
         </div>

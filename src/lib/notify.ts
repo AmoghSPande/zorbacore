@@ -54,7 +54,7 @@ export async function dueNudge(): Promise<string | null> {
 
   if (msg) {
     localStorage.setItem(KEY, today);
-    notify('HybridCoach', msg.replace(/^[^\w]+\s/, ''));
+    notify('Zorbacore', msg.replace(/^[^\w]+\s/, ''));
     return msg;
   }
   return null;
