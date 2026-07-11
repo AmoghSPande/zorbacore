@@ -289,10 +289,11 @@ function ActiveWorkout({
     onFinish(prs.length);
   };
 
+  const style = useLiveQuery(async () => (await db.profile.get('me'))?.trainingStyle ?? 'hybrid', []);
   const sections = [
-    { id: 'warmup' as const, label: 'Warm-up' },
-    { id: 'strength' as const, label: 'Strength' },
-    { id: 'core' as const, label: 'Core' },
+    { id: 'warmup' as const, label: style === 'yoga' ? 'Arrive' : 'Warm-up' },
+    { id: 'strength' as const, label: style === 'yoga' ? 'Flow' : style === 'senior' ? 'Main work' : 'Strength' },
+    { id: 'core' as const, label: style === 'yoga' ? 'Wind down' : style === 'senior' ? 'Balance & core' : 'Core' },
     { id: 'conditioning' as const, label: 'Conditioning' },
   ];
 
