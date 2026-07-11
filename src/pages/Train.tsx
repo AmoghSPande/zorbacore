@@ -2,8 +2,9 @@ import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useLiveQuery } from 'dexie-react-hooks';
 import { db, getProfile, todayStr } from '../db';
-import type { Exercise, SetLog, TrainingStyle, Workout, WorkoutType } from '../types';
-import { buildSession, alternativesFor, STYLES, type SessionPlan, type Symptoms } from '../lib/coach';
+import type { CustomPlan, Exercise, SetLog, TrainingStyle, Workout, WorkoutType } from '../types';
+import { buildSession, alternativesFor, applyGates, estimateMinutes, STYLES, type PlannedBlock, type SessionPlan, type Symptoms } from '../lib/coach';
+import { Slider } from '../components/inputs';
 import { detectPRs, fmtDuration, lastPerformance, suggestNext, type LastPerf } from '../lib/stats';
 import { Scale10, Stepper, RestTimer } from '../components/inputs';
 import ExerciseAnim from '../components/ExerciseAnim';
@@ -11,7 +12,7 @@ import Celebration from '../components/Celebration';
 
 type Stage =
   | { name: 'idle' }
-  | { name: 'checkin'; type: WorkoutType }
+  | { name: 'checkin'; type: WorkoutType; planId?: string }
   | { name: 'active'; workoutId: number; plan: SessionPlan }
   | { name: 'done'; workoutId: number; prCount: number };
 
@@ -53,7 +54,27 @@ export default function Train() {
             ? Math.floor((Date.now() - new Date(lastDate + 'T12:00:00').getTime()) / 86400000)
             : 0;
           const profile = await getProfile();
-          const plan = buildSession(stage.type, sym, { minutes, gapDays }, profile.trainingStyle ?? 'hybrid');
+          let plan: SessionPlan;
+          if (stage.planId) {
+            const custom = await db.plans.get(stage.planId);
+            const adaptations: string[] = [];
+            const blocks: PlannedBlock[] = (custom?.blocks ?? []).map((blk) => {
+              const gated = applyGates(blk.exerciseId, sym);
+              if (gated.swap && gated.exerciseId !== blk.exerciseId) {
+                adaptations.push(`Swapped ${blk.exerciseId.replace(/-/g, ' ')} → ${gated.exerciseId.replace(/-/g, ' ')} (${gated.swap})`);
+              }
+              return { exerciseId: gated.exerciseId, sets: blk.sets, reps: blk.reps, section: 'strength', tier: 1 };
+            });
+            plan = {
+              type: 'custom',
+              title: custom?.name ?? 'My plan',
+              blocks,
+              adaptations,
+              estMinutes: estimateMinutes(blocks),
+            };
+          } else {
+            plan = buildSession(stage.type, sym, { minutes, gapDays }, profile.trainingStyle ?? 'hybrid');
+          }
           const id = await db.workouts.add({
             date: todayStr(),
             type: stage.type,
@@ -88,12 +109,14 @@ export default function Train() {
     return <Summary workoutId={stage.workoutId} prCount={stage.prCount} onClose={() => setStage({ name: 'idle' })} />;
   }
 
-  return <StartScreen onStart={(type) => setStage({ name: 'checkin', type })} />;
+  return <StartScreen onStart={(type, planId) => setStage({ name: 'checkin', type, planId })} />;
 }
 
 // ---------------- start screen ----------------
 
-function StartScreen({ onStart }: { onStart: (t: WorkoutType) => void }) {
+function StartScreen({ onStart }: { onStart: (t: WorkoutType, planId?: string) => void }) {
+  const [showPlanEditor, setShowPlanEditor] = useState(false);
+  const myPlans = useLiveQuery(() => db.plans.toArray(), []) ?? [];
   const recent = useLiveQuery(
     () => db.workouts.orderBy('date').reverse().limit(5).toArray(),
     [],
@@ -135,6 +158,31 @@ function StartScreen({ onStart }: { onStart: (t: WorkoutType) => void }) {
         <button className="btn mobility" onClick={() => onStart('mobility')}>Mobility session</button>
       </div>
       <button className="btn ghost" onClick={() => onStart('custom')}>Empty workout (pick exercises as you go)</button>
+
+      <div className="card pad-sm">
+        <div className="row-between" style={{ marginBottom: myPlans.length ? 2 : 0 }}>
+          <div className="card-title" style={{ margin: 0 }}>My workout plans</div>
+          <button className="btn sm" onClick={() => setShowPlanEditor(true)}>+ Create</button>
+        </div>
+        {myPlans.length === 0 && (
+          <div className="tag-note" style={{ marginTop: 6 }}>
+            Build your own plan — pick the exercises, sets and reps, and start it any day.
+            Symptom checks and safety swaps still apply.
+          </div>
+        )}
+        {myPlans.map((pl) => (
+          <div key={pl.id} className="li">
+            <div className="li-main">
+              <div className="li-title">{pl.name}</div>
+              <div className="li-sub">{pl.blocks.length} exercises · ~{estimateMinutes(pl.blocks.map((b) => ({ ...b, section: 'strength' as const, tier: 1 as const })))} min</div>
+            </div>
+            <button className="btn sm ghost" onClick={() => db.plans.delete(pl.id)}>✕</button>
+            <button className="btn sm primary" onClick={() => onStart('custom', pl.id)}>Start</button>
+          </div>
+        ))}
+      </div>
+
+      {showPlanEditor && <PlanEditor onClose={() => setShowPlanEditor(false)} />}
 
       {recent.length > 0 && (
         <div className="card pad-sm">
@@ -655,6 +703,87 @@ function Summary({ workoutId, prCount, onClose }: { workoutId: number; prCount: 
         ))}
       </div>
       <button className="btn primary big" onClick={onClose}>Done</button>
+    </div>
+  );
+}
+
+// ---------------- custom plan editor ----------------
+
+function PlanEditor({ onClose }: { onClose: () => void }) {
+  const [name, setName] = useState('');
+  const [blocks, setBlocks] = useState<CustomPlan['blocks']>([]);
+  const [picking, setPicking] = useState(false);
+  const exercises = useLiveQuery(() => db.exercises.toArray(), []) ?? [];
+  const exMap = new Map(exercises.map((e) => [e.id, e]));
+
+  const save = async () => {
+    if (!name.trim() || blocks.length === 0) return;
+    await db.plans.put({
+      id: 'plan-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 6),
+      name: name.trim(),
+      blocks,
+      createdAt: Date.now(),
+      updatedAt: Date.now(),
+    });
+    onClose();
+  };
+
+  return (
+    <div className="modal-back" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <h2>Create your plan</h2>
+        <input
+          className="input" autoFocus placeholder="Plan name — e.g. Push Day, Leg Blast"
+          value={name} onChange={(e) => setName(e.target.value)}
+        />
+
+        {blocks.map((blk, i) => {
+          const ex = exMap.get(blk.exerciseId);
+          return (
+            <div key={i} className="card pad-sm">
+              <div className="row" style={{ marginBottom: 8 }}>
+                <div style={{ width: 48, height: 34, flexShrink: 0 }}>
+                  <ExerciseAnim animId={ex?.animation ?? ''} />
+                </div>
+                <div className="grow li-title" style={{ fontSize: '0.9rem' }}>{ex?.name ?? blk.exerciseId}</div>
+                <button className="btn sm ghost" onClick={() => setBlocks(blocks.filter((_, j) => j !== i))}>✕</button>
+              </div>
+              <div className="row" style={{ gap: 12 }}>
+                <div className="grow">
+                  <Slider
+                    value={blk.sets} min={1} max={6}
+                    format={(v) => `${v} set${v > 1 ? 's' : ''}`}
+                    onChange={(v) => setBlocks(blocks.map((b, j) => (j === i ? { ...b, sets: v } : b)))}
+                  />
+                </div>
+                <input
+                  className="input" style={{ width: 88, textAlign: 'center' }} aria-label="Reps"
+                  value={blk.reps}
+                  onChange={(e) => setBlocks(blocks.map((b, j) => (j === i ? { ...b, reps: e.target.value } : b)))}
+                />
+              </div>
+            </div>
+          );
+        })}
+
+        <button className="btn" onClick={() => setPicking(true)}>+ Add exercise</button>
+
+        <div className="row">
+          <button className="btn ghost grow" onClick={onClose}>Cancel</button>
+          <button className="btn primary grow" disabled={!name.trim() || blocks.length === 0} onClick={save}>
+            Save plan{blocks.length ? ` (${blocks.length})` : ''}
+          </button>
+        </div>
+
+        {picking && (
+          <ExercisePicker
+            exercises={exercises}
+            sym={{ knee: 1, back: 1, energy: 8 }}
+            onPick={(id) => { setBlocks([...blocks, { exerciseId: id, sets: 3, reps: '8-12' }]); setPicking(false); }}
+            onClose={() => setPicking(false)}
+          />
+        )}
+      </div>
     </div>
   );
 }

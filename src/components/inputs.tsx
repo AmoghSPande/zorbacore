@@ -64,6 +64,39 @@ export function Stepper({
   );
 }
 
+/** Slider with a live value readout — for bounded profile-style numbers. */
+export function Slider({
+  value, onChange, min, max, step = 1, unit = '', format,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+  min: number;
+  max: number;
+  step?: number;
+  unit?: string;
+  format?: (v: number) => string;
+}) {
+  const pct = ((value - min) / (max - min)) * 100;
+  return (
+    <div className="slider-wrap">
+      <div className="row-between" style={{ marginBottom: 6 }}>
+        <span className="slider-val">{format ? format(value) : `${value}${unit ? ` ${unit}` : ''}`}</span>
+        <span className="tag-note" style={{ fontSize: '0.72rem' }}>{min}–{max}{unit ? ` ${unit}` : ''}</span>
+      </div>
+      <input
+        type="range"
+        className="slider"
+        min={min} max={max} step={step} value={value}
+        style={{ ['--fill' as string]: `${pct}%` }}
+        onChange={(e) => {
+          onChange(Number(e.target.value));
+          if (navigator.vibrate) navigator.vibrate(6);
+        }}
+      />
+    </div>
+  );
+}
+
 /** Rest timer that counts down after a set is logged. */
 export function RestTimer({ seconds, onDone }: { seconds: number; onDone?: () => void }) {
   const [left, setLeft] = useState(seconds);

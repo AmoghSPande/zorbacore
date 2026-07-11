@@ -3,7 +3,7 @@ import { updateProfile } from '../db';
 import type { TrainingStyle } from '../types';
 import { STYLES } from '../lib/coach';
 import { cloudEnabled, signInGoogle, useCloud } from '../lib/cloud';
-import { Stepper } from '../components/inputs';
+import { Slider } from '../components/inputs';
 import ExerciseAnim from '../components/ExerciseAnim';
 
 function Grad({ children }: { children: React.ReactNode }) {
@@ -53,26 +53,38 @@ export default function Onboarding() {
   const cloud = useCloud();
 
   const [name, setName] = useState('');
-  const [heightCm, setHeightCm] = useState(0);
-  const [knee, setKnee] = useState<boolean | null>(null);
-  const [back, setBack] = useState<boolean | null>(null);
+  const [heightCm, setHeightCm] = useState(170);
+  const [conditions, setConditions] = useState<string[]>([]);
   const [conditionsNote, setConditionsNote] = useState('');
-  const [targetWeightKg, setTargetWeightKg] = useState(0);
-  const [gymDays, setGymDays] = useState<2 | 3>(3);
+  const [targetWeightKg, setTargetWeightKg] = useState(70);
+  const [targetTouched, setTargetTouched] = useState(false);
+  const [gymDays, setGymDays] = useState(3);
   const [goalsNote, setGoalsNote] = useState('');
   const [style, setStyle] = useState<TrainingStyle | null>(null);
   const [signErr, setSignErr] = useState<string | null>(null);
 
+  const knee = conditions.includes('Knee pain');
+  const back = conditions.includes('Lower-back pain');
+  const toggleCondition = (c: string) => {
+    setConditions((prev) => {
+      if (c === 'None of these') return prev.includes(c) ? [] : ['None of these'];
+      const withoutNone = prev.filter((x) => x !== 'None of these');
+      return withoutNone.includes(c) ? withoutNone.filter((x) => x !== c) : [...withoutNone, c];
+    });
+  };
+
   const TOTAL = 6;
 
   const finish = async () => {
+    const otherConditions = conditions.filter((c) => !['Knee pain', 'Lower-back pain', 'None of these'].includes(c));
+    const note = [otherConditions.join(', '), conditionsNote.trim()].filter(Boolean).join('; ');
     await updateProfile({
       name: name.trim() || 'Athlete',
       heightCm: heightCm || undefined,
-      kneeIssue: knee ?? false,
-      backIssue: back ?? false,
-      conditionsNote: conditionsNote.trim() || undefined,
-      targetWeightKg: targetWeightKg || undefined,
+      kneeIssue: knee,
+      backIssue: back,
+      conditionsNote: note || undefined,
+      targetWeightKg: targetTouched ? targetWeightKg : undefined,
       trainingDaysPerWeek: gymDays,
       goalsNote: goalsNote.trim() || undefined,
       trainingStyle: style ?? 'hybrid',
@@ -95,13 +107,23 @@ export default function Onboarding() {
     </div>
   );
 
-  const Nav = ({ nextLabel = 'Continue', canNext = true, onNext }: { nextLabel?: string; canNext?: boolean; onNext?: () => void }) => (
-    <div className="row" style={{ marginTop: 'auto', paddingTop: 16 }}>
-      {step > 0 && <button className="btn" onClick={() => setStep(step - 1)}>Back</button>}
-      <button className="btn primary grow big" disabled={!canNext}
-        onClick={() => (onNext ? onNext() : setStep(step + 1))}>
-        {nextLabel}
-      </button>
+  const Nav = ({ nextLabel = 'Continue', canNext = true, onNext, onSkip }: {
+    nextLabel?: string; canNext?: boolean; onNext?: () => void; onSkip?: () => void;
+  }) => (
+    <div style={{ marginTop: 'auto', paddingTop: 16 }}>
+      <div className="row">
+        {step > 0 && <button className="btn" onClick={() => setStep(step - 1)}>Back</button>}
+        <button className="btn primary grow big" disabled={!canNext}
+          onClick={() => (onNext ? onNext() : setStep(step + 1))}>
+          {nextLabel}
+        </button>
+      </div>
+      {onSkip && (
+        <button className="btn ghost" style={{ width: '100%', marginTop: 4 }}
+          onClick={() => { onSkip(); setStep(step + 1); }}>
+          Skip for now — the coach will use safe defaults
+        </button>
+      )}
     </div>
   );
 
@@ -191,8 +213,8 @@ export default function Onboarding() {
               <input className="input" autoFocus value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
             </label>
             <label className="field">
-              <span className="lbl">Height (cm) — unlocks body-composition tracking (optional)</span>
-              <Stepper value={heightCm} onChange={setHeightCm} step={1} />
+              <span className="lbl">Height — unlocks body-composition tracking</span>
+              <Slider value={heightCm} onChange={setHeightCm} min={130} max={210} unit="cm" />
             </label>
             <Nav canNext={name.trim().length > 0} />
           </>
@@ -206,24 +228,25 @@ export default function Onboarding() {
               sub="Workouts adapt automatically around these — swapping exercises and easing intensity when symptoms rise."
             />
             <div className="card">
-              <div className="card-title">Knee trouble (pain, past injury, cartilage issues)?</div>
-              <div className="row">
-                <button className={`chip ${knee === true ? 'on' : ''}`} onClick={() => setKnee(true)}>Yes</button>
-                <button className={`chip ${knee === false ? 'on' : ''}`} onClick={() => setKnee(false)}>No</button>
-              </div>
-            </div>
-            <div className="card">
-              <div className="card-title">Lower-back stiffness or pain?</div>
-              <div className="row">
-                <button className={`chip ${back === true ? 'on' : ''}`} onClick={() => setBack(true)}>Yes</button>
-                <button className={`chip ${back === false ? 'on' : ''}`} onClick={() => setBack(false)}>No</button>
+              <div className="card-title">Select everything that applies</div>
+              <div className="chip-row">
+                {['Knee pain', 'Lower-back pain', 'Shoulder pain', 'Neck pain', 'Hip pain',
+                  'Ankle / foot', 'Elbow / wrist', 'High blood pressure', 'Diabetes', 'Asthma',
+                  'None of these'].map((c) => (
+                  <button key={c} className={`chip ${conditions.includes(c) ? 'on' : ''}`} onClick={() => toggleCondition(c)}>
+                    {conditions.includes(c) ? '✓ ' : ''}{c}
+                  </button>
+                ))}
               </div>
             </div>
             <label className="field">
-              <span className="lbl">Anything else (shoulder, ankle, condition…) — optional</span>
-              <input className="input" value={conditionsNote} onChange={(e) => setConditionsNote(e.target.value)} placeholder="e.g. left shoulder impingement" />
+              <span className="lbl">Anything else the coach should know — optional</span>
+              <input className="input" value={conditionsNote} onChange={(e) => setConditionsNote(e.target.value)} placeholder="e.g. recovering from ACL surgery, 6 months ago" />
             </label>
-            <Nav canNext={knee !== null && back !== null} />
+            <Nav
+              canNext={conditions.length > 0}
+              onSkip={() => setConditions([])}
+            />
           </>
         )}
 
@@ -251,31 +274,35 @@ export default function Onboarding() {
                 </button>
               ))}
             </div>
-            <Nav canNext={style !== null} />
+            <Nav canNext={style !== null} onSkip={() => setStyle(null)} />
           </>
         )}
 
         {step === 4 && (
           <>
             <StepHead n={4} title={<>Set your <Grad>targets.</Grad></>} />
-            <label className="field">
-              <span className="lbl">Target body weight (kg) — optional, guides the fat-loss dashboard</span>
-              <Stepper value={targetWeightKg} onChange={setTargetWeightKg} step={0.5} />
-            </label>
             <div className="card">
-              <div className="card-title">Gym sessions you can realistically do per week</div>
-              <div className="row">
-                {[2, 3].map((n) => (
-                  <button key={n} className={`chip ${gymDays === n ? 'on' : ''}`} onClick={() => setGymDays(n as 2 | 3)}>{n} days</button>
-                ))}
+              <div className="card-title">Training days you can realistically commit per week</div>
+              <Slider value={gymDays} onChange={setGymDays} min={1} max={7}
+                format={(v) => `${v} day${v > 1 ? 's' : ''} / week`} />
+              <div className="tag-note" style={{ marginTop: 4 }}>
+                {gymDays <= 2 ? 'Two focused sessions still transform a body — the plan makes each one count.'
+                  : gymDays <= 4 ? 'The sweet spot for most people — strength plus cardio with full recovery.'
+                  : 'Ambitious! The coach will balance hard days with easy ones so you don\u2019t burn out.'}
               </div>
+            </div>
+            <div className="card">
+              <div className="card-title">Target body weight — guides the fat-loss dashboard</div>
+              <Slider value={targetWeightKg} onChange={(v) => { setTargetWeightKg(v); setTargetTouched(true); }}
+                min={40} max={140} step={0.5} unit="kg"
+                format={(v) => targetTouched ? `${v} kg` : 'slide to set (optional)'} />
             </div>
             <label className="field">
               <span className="lbl">In your own words, what are you chasing? — optional</span>
               <textarea className="textarea" rows={3} value={goalsNote} onChange={(e) => setGoalsNote(e.target.value)}
                 placeholder="e.g. lose belly fat, run a 5K without stopping, get stronger without hurting my back" />
             </label>
-            <Nav />
+            <Nav onSkip={() => { setTargetTouched(false); setGymDays(3); setGoalsNote(''); }} />
           </>
         )}
 
