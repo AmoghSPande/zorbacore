@@ -9,6 +9,7 @@ import { detectPRs, fmtDuration, lastPerformance, suggestNext, type LastPerf } f
 import { Scale10, Stepper, RestTimer } from '../components/inputs';
 import ExerciseAnim from '../components/ExerciseAnim';
 import Celebration from '../components/Celebration';
+import AnimatedNumber from '../components/AnimatedNumber';
 
 type Stage =
   | { name: 'idle' }
@@ -789,14 +790,14 @@ function Summary({ workoutId, prCount, onClose }: { workoutId: number; prCount: 
       <div className="card">
         <div className="grid-3">
           <div className="stat"><span className="v">{workout.endedAt ? fmtDuration(workout.endedAt - workout.startedAt) : '—'}</span><span className="k">duration</span></div>
-          <div className="stat"><span className="v">{workout.sets.length}</span><span className="k">sets</span></div>
-          <div className="stat"><span className="v">{Math.round(tonnage / 100) / 10}<small>t</small></span><span className="k">tonnage</span></div>
+          <div className="stat"><span className="v"><AnimatedNumber value={workout.sets.length} /></span><span className="k">sets</span></div>
+          <div className="stat"><span className="v"><AnimatedNumber value={Math.round(tonnage / 100) / 10} decimals={1} /><small>t</small></span><span className="k">tonnage</span></div>
         </div>
         <div className="divider" />
         <div className="grid-3">
-          <div className="stat"><span className="v" style={{ color: 'var(--accent)' }}>{gluteSets}</span><span className="k">glute sets</span></div>
-          <div className="stat"><span className="v" style={{ color: 'var(--run)' }}>{bicepSets}</span><span className="k">bicep sets</span></div>
-          <div className="stat"><span className="v" style={{ color: prCount ? 'var(--warn)' : undefined }}>{prCount}</span><span className="k">new PRs</span></div>
+          <div className="stat"><span className="v" style={{ color: 'var(--accent)' }}><AnimatedNumber value={gluteSets} /></span><span className="k">glute sets</span></div>
+          <div className="stat"><span className="v" style={{ color: 'var(--run)' }}><AnimatedNumber value={bicepSets} /></span><span className="k">bicep sets</span></div>
+          <div className="stat"><span className="v" style={{ color: prCount ? 'var(--warn)' : undefined }}><AnimatedNumber value={prCount} /></span><span className="k">new PRs</span></div>
         </div>
       </div>
       {prCount > 0 && (

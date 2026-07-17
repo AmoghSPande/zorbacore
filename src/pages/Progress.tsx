@@ -6,6 +6,7 @@ import { e1rm, weeklyVolumes, type WeekVolume } from '../lib/stats';
 import { computeRunStats, type RunStats } from '../lib/running';
 import { LineChart, BarChart, VIZ, type Pt } from '../components/charts';
 import { Stepper } from '../components/inputs';
+import ExerciseAnim from '../components/ExerciseAnim';
 
 function shortDate(d: string): string {
   return d.slice(5).replace('-', '/');
@@ -220,7 +221,12 @@ export default function Progress() {
       {/* PRs */}
       <div className="card pad-sm">
         <div className="card-title">🏆 Personal records</div>
-        {prs.length === 0 && <div className="empty">PRs appear automatically when you beat your best.</div>}
+        {prs.length === 0 && (
+          <div className="empty-state" style={{ padding: '12px 10px 8px' }}>
+            <div style={{ width: 130, height: 88, opacity: 0.85 }}><ExerciseAnim animId="hip-thrust" /></div>
+            <div className="es-note">PRs appear here automatically the moment you beat your best — keep lifting.</div>
+          </div>
+        )}
         {prs.map((p) => (
           <div key={p.id} className="li">
             <div className="li-main">

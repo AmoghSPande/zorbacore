@@ -17,6 +17,32 @@ import Habits from './pages/Habits';
 import Food from './pages/Food';
 import AnimTest from './pages/AnimTest';
 
+/** Shimmer placeholders while IndexedDB opens — never a blank screen. */
+function SplashSkeleton() {
+  return (
+    <div className="page" aria-hidden>
+      <div className="row-between">
+        <div>
+          <div className="skel" style={{ width: 180, height: 26 }} />
+          <div className="skel" style={{ width: 120, height: 13, marginTop: 8 }} />
+        </div>
+        <div className="skel" style={{ width: 40, height: 40, borderRadius: 13 }} />
+      </div>
+      <div className="skel" style={{ height: 106, borderRadius: 'var(--radius)' }} />
+      <div className="skel" style={{ height: 150, borderRadius: 'var(--radius)' }} />
+      <div className="grid-2">
+        <div className="skel" style={{ height: 72, borderRadius: 'var(--radius)' }} />
+        <div className="skel" style={{ height: 72, borderRadius: 'var(--radius)' }} />
+      </div>
+      <div className="grid-3">
+        <div className="skel" style={{ height: 64, borderRadius: 'var(--radius)' }} />
+        <div className="skel" style={{ height: 64, borderRadius: 'var(--radius)' }} />
+        <div className="skel" style={{ height: 64, borderRadius: 'var(--radius)' }} />
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   // distinguish "still loading" (undefined) from "no profile yet" (null)
   const profile = useLiveQuery(async () => (await db.profile.get('me')) ?? null, []);
@@ -28,7 +54,7 @@ export default function App() {
     else document.documentElement.dataset.style = style;
   }, [profile?.trainingStyle]);
 
-  if (profile === undefined) return null; // db still opening
+  if (profile === undefined) return <SplashSkeleton />; // db still opening
   if (profile === null || !profile.onboarded) return <Onboarding />;
   return (
     <>

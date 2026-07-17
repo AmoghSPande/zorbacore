@@ -6,6 +6,7 @@ import { FOODS, type FoodItem } from '../data/foods';
 import BackLink from '../components/BackLink';
 import { BarChart, VIZ } from '../components/charts';
 import { Stepper } from '../components/inputs';
+import AnimatedNumber from '../components/AnimatedNumber';
 
 const SLOTS: { id: MealSlot; label: string; emoji: string }[] = [
   { id: 'breakfast', label: 'Breakfast', emoji: '🌅' },
@@ -61,11 +62,11 @@ export default function Food() {
       <div className="card">
         <div className="grid-2">
           <div className="stat">
-            <span className="v">{kcal}<small>{kcalTarget ? ` / ${kcalTarget}` : ''} kcal</small></span>
+            <span className="v"><AnimatedNumber value={kcal} /><small>{kcalTarget ? ` / ${kcalTarget}` : ''} kcal</small></span>
             <span className="k">{dayLabel.toLowerCase()}</span>
           </div>
           <div className="stat">
-            <span className="v">{protein}<small>{proteinTarget ? ` / ${proteinTarget}` : ''} g</small></span>
+            <span className="v"><AnimatedNumber value={protein} /><small>{proteinTarget ? ` / ${proteinTarget}` : ''} g</small></span>
             <span className="k">protein</span>
           </div>
         </div>
