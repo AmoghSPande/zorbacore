@@ -20,6 +20,14 @@ export type PropDef =
   | { kind: 'ellipse'; cx: number; cy: number; rx: number; ry: number }
   | { kind: 'circle'; at: string | Pt; r: number };
 
+/** Tiny cartoon face drawn inside the head circle (landing-page hero scenes). */
+export interface FaceDef {
+  /** which way the face points: side view facing right, lying face-up, or toward the viewer */
+  view: 'right' | 'up' | 'front';
+  /** grr: cute angry game-face · zen: closed eyes + soft smile · joy: wide eyes + big smile */
+  mood: 'grr' | 'zen' | 'joy';
+}
+
 export interface AnimDef {
   frames: Pose[];
   /** pingpong: 0→1→0 with easing (reps). cycle: wrap around (gait). */
@@ -29,6 +37,7 @@ export interface AnimDef {
   props?: PropDef[];
   /** hide the floor line (e.g. floor-lying drills draw their own mat) */
   noFloor?: boolean;
+  face?: FaceDef;
 }
 
 export function lerpPt(a: Pt, b: Pt, t: number): Pt {

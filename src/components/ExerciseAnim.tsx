@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { ANIMS } from '../anim/anims';
-import { poseAt, resolve, type AnimDef, type Pose, type Pt } from '../anim/engine';
+import { poseAt, resolve, type AnimDef, type FaceDef, type Pose, type Pt } from '../anim/engine';
 
 const STROKE = '#e8edf2';
 const FAR = '#64748b';
@@ -22,7 +22,58 @@ function Limb({ pts, color, w = 4.5 }: { pts: (Pt | undefined)[]; color: string;
   );
 }
 
-function Figure({ pose }: { pose: Pose }) {
+/** Cute cartoon face inside the head circle. Offsets are relative to head center. */
+function Face({ at, face }: { at: Pt; face: FaceDef }) {
+  const [hx, hy] = at;
+  const S = { stroke: STROKE, strokeWidth: 1.5, strokeLinecap: 'round' as const, fill: 'none' };
+  if (face.view === 'front') {
+    if (face.mood === 'zen') {
+      return (
+        <g {...S}>
+          <line x1={hx - 3.2} y1={hy - 0.8} x2={hx - 1.2} y2={hy - 0.8} />
+          <line x1={hx + 1.2} y1={hy - 0.8} x2={hx + 3.2} y2={hy - 0.8} />
+          <path d={`M ${hx - 2.2} ${hy + 2.2} Q ${hx} ${hy + 3.8} ${hx + 2.2} ${hy + 2.2}`} />
+        </g>
+      );
+    }
+    if (face.mood === 'joy') {
+      return (
+        <g {...S}>
+          <circle cx={hx - 2.2} cy={hy - 1} r={1} fill={STROKE} stroke="none" />
+          <circle cx={hx + 2.2} cy={hy - 1} r={1} fill={STROKE} stroke="none" />
+          <path d={`M ${hx - 2.6} ${hy + 1.6} Q ${hx} ${hy + 4.4} ${hx + 2.6} ${hy + 1.6}`} />
+        </g>
+      );
+    }
+    // grr, facing the viewer: angry brows slanting in, dot eyes
+    return (
+      <g {...S}>
+        <line x1={hx - 3.6} y1={hy - 3.3} x2={hx - 1} y2={hy - 2} />
+        <line x1={hx + 1} y1={hy - 2} x2={hx + 3.6} y2={hy - 3.3} />
+        <circle cx={hx - 2.1} cy={hy - 0.2} r={0.9} fill={STROKE} stroke="none" />
+        <circle cx={hx + 2.1} cy={hy - 0.2} r={0.9} fill={STROKE} stroke="none" />
+      </g>
+    );
+  }
+  if (face.view === 'up') {
+    // lying face-up (bench): the 'right' face rotated to look at the ceiling
+    return (
+      <g {...S}>
+        <line x1={hx - 3.9} y1={hy - 0.6} x2={hx - 2.3} y2={hy - 4.3} />
+        <circle cx={hx - 0.9} cy={hy - 2.6} r={1} fill={STROKE} stroke="none" />
+      </g>
+    );
+  }
+  // side view facing right: one determined brow + eye
+  return (
+    <g {...S}>
+      <line x1={hx + 0.6} y1={hy - 3.9} x2={hx + 4.3} y2={hy - 2.3} />
+      <circle cx={hx + 2.6} cy={hy - 0.9} r={1} fill={STROKE} stroke="none" />
+    </g>
+  );
+}
+
+function Figure({ pose, face }: { pose: Pose; face?: FaceDef }) {
   const p = pose;
   return (
     <g>
@@ -33,6 +84,7 @@ function Figure({ pose }: { pose: Pose }) {
       <Limb pts={[p.hip, p.midback, p.shoulder]} color={STROKE} w={5.5} />
       {/* head */}
       {p.head && <circle cx={p.head[0]} cy={p.head[1]} r={6.5} fill="none" stroke={STROKE} strokeWidth={4} />}
+      {p.head && face && <Face at={p.head} face={face} />}
       {/* near-side limbs */}
       <Limb pts={[p.hip, p.kneeR, p.ankleR, p.toeR]} color={STROKE} />
       <Limb pts={[p.shoulder, p.elbowR, p.wristR]} color={STROKE} w={4} />
@@ -138,7 +190,7 @@ export default function ExerciseAnim({ animId, className }: { animId: string; cl
     <svg viewBox="0 0 200 140" className={className}>
       {!def.noFloor && <line x1={8} y1={120} x2={192} y2={120} stroke="#2a3441" strokeWidth={2.5} strokeLinecap="round" />}
       <Props def={def} pose={pose} />
-      <Figure pose={pose} />
+      <Figure pose={pose} face={def.face} />
       <circle cx={188} cy={10} r={3} fill={ACCENT} opacity={0.35 + 0.65 * Math.sin(phase * Math.PI * 2) ** 2} />
     </svg>
   );

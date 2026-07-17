@@ -32,13 +32,15 @@ function StepHead({ n, title, sub }: { n: number; title: React.ReactNode; sub?: 
   );
 }
 
-/** Rotating cast of aspirational stick figures — the app's signature, front and center. */
+/** Zorby's journey — a looping seven-beat story told by the app's stick figures. */
 const HERO_SCENES = [
-  { anim: 'hero-bench', line: 'Today the bar. Tomorrow the world.' },
-  { anim: 'hero-climb', line: 'Training now. Summits later.' },
-  { anim: 'hero-yoga', line: 'Find your balance. Mostly.' },
-  { anim: 'hero-box', line: 'Float like a butterfly.' },
-  { anim: 'run-gait', line: 'Couch → 5K → unstoppable.' },
+  { anim: 'hero-dream', line: 'This is Zorby. Zorby has a dream.' },
+  { anim: 'hero-bench', line: 'So the grind begins.' },
+  { anim: 'hero-run', line: 'Some days you fly…' },
+  { anim: 'hero-box', line: '…some days you fight back.' },
+  { anim: 'hero-yoga', line: 'Breathe. Recover. Repeat.' },
+  { anim: 'hero-climb', line: 'Keep going long enough…' },
+  { anim: 'hero-summit', line: '…and the view changes. Your turn.' },
 ];
 
 function HeroCycler() {
