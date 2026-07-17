@@ -1403,4 +1403,104 @@ export const ANIMS: Record<string, AnimDef> = {
     mode: 'cycle',
     duration: 800,
   },
+
+  // ---------------- landing-page hero scenes (aspirational, tongue-in-cheek) ----------------
+
+  // Bench press with comically oversized plates.
+  'hero-bench': {
+    frames: [
+      {
+        head: [55, 84], shoulder: [71, 86], hip: [106, 87],
+        kneeR: [124, 97], ankleR: [127, 117], toeR: [136, 117],
+        elbowR: [87, 98], wristR: [80, 82], bar: [82, 79],
+      },
+      {
+        head: [55, 84], shoulder: [71, 86], hip: [106, 87],
+        kneeR: [124, 97], ankleR: [127, 117], toeR: [136, 117],
+        elbowR: [78, 74], wristR: [80, 58], bar: [82, 55],
+      },
+    ],
+    props: [
+      { kind: 'rect', x: 42, y: 92, w: 76, h: 8 },
+      { kind: 'rect', x: 50, y: 100, w: 7, h: 20 },
+      { kind: 'rect', x: 102, y: 100, w: 7, h: 20 },
+      { kind: 'plate', at: 'bar', r: 16 },
+    ],
+    duration: 1900,
+  },
+
+  // Scrambling up a mountain face toward a summit flag.
+  'hero-climb': {
+    frames: [
+      {
+        head: [80, 48], shoulder: [72, 58], hip: [56, 76],
+        kneeR: [64, 72], ankleR: [54, 82], kneeL: [48, 86], ankleL: [38, 98],
+        elbowR: [84, 52], wristR: [96, 44],
+        elbowL: [66, 66], wristL: [70, 70],
+      },
+      {
+        head: [86, 42], shoulder: [78, 52], hip: [62, 70],
+        kneeR: [68, 66], ankleR: [58, 76], kneeL: [54, 80], ankleL: [44, 92],
+        elbowR: [88, 48], wristR: [96, 44],
+        elbowL: [74, 56], wristL: [84, 50],
+      },
+    ],
+    props: [
+      { kind: 'line', from: [14, 120], to: [118, 26], w: 3 },
+      { kind: 'line', from: [118, 26], to: [186, 120], w: 3 },
+      { kind: 'line', from: [118, 26], to: [118, 6], w: 2 },
+      { kind: 'line', from: [118, 9], to: [134, 14], w: 6 },
+    ],
+    duration: 1700,
+  },
+
+  // Tree pose, arms joined overhead, gentle breath.
+  'hero-yoga': {
+    frames: [
+      {
+        head: [100, 26], shoulder: [100, 40], hip: [100, 72],
+        kneeR: [102, 93], ankleR: [102, 114],
+        kneeL: [82, 88], ankleL: [94, 76],
+        elbowR: [112, 28], wristR: [103, 12],
+        elbowL: [88, 28], wristL: [97, 12],
+      },
+      {
+        head: [100, 24], shoulder: [100, 39], hip: [100, 71],
+        kneeR: [102, 93], ankleR: [102, 114],
+        kneeL: [80, 86], ankleL: [94, 74],
+        elbowR: [111, 25], wristR: [102, 8],
+        elbowL: [89, 25], wristL: [98, 8],
+      },
+    ],
+    duration: 2600,
+  },
+
+  // Jabbing a hanging bag that recoils on the hit.
+  'hero-box': {
+    frames: [
+      {
+        head: [94, 32], shoulder: [90, 44], hip: [88, 72],
+        kneeR: [98, 92], ankleR: [96, 114], toeR: [107, 117],
+        kneeL: [78, 94], ankleL: [72, 114], toeL: [83, 117],
+        elbowR: [102, 54], wristR: [104, 42],
+        elbowL: [84, 56], wristL: [96, 46],
+        bagTop: [152, 26], bagBot: [150, 66],
+      },
+      {
+        head: [98, 32], shoulder: [94, 44], hip: [90, 72],
+        kneeR: [100, 92], ankleR: [96, 114], toeR: [107, 117],
+        kneeL: [80, 94], ankleL: [72, 114], toeL: [83, 117],
+        elbowR: [114, 46], wristR: [132, 44],
+        elbowL: [86, 58], wristL: [98, 50],
+        bagTop: [152, 26], bagBot: [161, 63],
+      },
+    ],
+    props: [
+      { kind: 'line', from: [152, 2], to: 'bagTop', w: 2 },
+      { kind: 'line', from: 'bagTop', to: 'bagBot', w: 16 },
+      { kind: 'circle', at: 'wristR', r: 5 },
+      { kind: 'circle', at: 'wristL', r: 4.5 },
+    ],
+    duration: 1000,
+  },
 };
