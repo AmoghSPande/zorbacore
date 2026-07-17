@@ -7,10 +7,33 @@ import { computeDayStatus, type DayStatus } from '../lib/readiness';
 import { computeRunStats, fmtTime, type RunStats } from '../lib/running';
 import DailyCheckin from '../components/DailyCheckin';
 import { Sparkline, VIZ } from '../components/charts';
+import AnimatedNumber, { useCountUp } from '../components/AnimatedNumber';
 import { dueNudge } from '../lib/notify';
 
 function ring(score: number): string {
   return score >= 72 ? 'var(--accent)' : score >= 48 ? 'var(--warn)' : 'var(--danger)';
+}
+
+/** Readiness ring that sweeps from empty to the score on mount. */
+function ReadinessRing({ score }: { score: number }) {
+  const anim = useCountUp(score, 900);
+  return (
+    <svg viewBox="0 0 80 80" width={74} height={74} style={{ filter: `drop-shadow(0 0 10px ${ring(score)}44)` }}>
+      <defs>
+        <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0%" stopColor={ring(score)} />
+          <stop offset="100%" stopColor="var(--run)" />
+        </linearGradient>
+      </defs>
+      <circle cx={40} cy={40} r={34} fill="none" stroke="var(--surface-3)" strokeWidth={7} />
+      <circle
+        cx={40} cy={40} r={34} fill="none" stroke="url(#ringGrad)" strokeWidth={7}
+        strokeLinecap="round" strokeDasharray={`${(anim / 100) * 213.6} 213.6`}
+        transform="rotate(-90 40 40)"
+      />
+      <text x={40} y={47} textAnchor="middle" fontSize={21} fontWeight={700} fill="var(--text)" fontFamily="Space Grotesk, Inter, sans-serif">{Math.round(anim)}</text>
+    </svg>
+  );
 }
 
 function HabitsFoodTiles() {
@@ -30,7 +53,7 @@ function HabitsFoodTiles() {
         <span className="k">habits today</span>
       </Link>
       <Link to="/food" className="card pad-sm stat" style={{ display: 'flex' }}>
-        <span className="v">{kcal > 0 ? kcal : '＋'}<small>{kcal > 0 ? ' kcal' : ''}</small></span>
+        <span className="v">{kcal > 0 ? <AnimatedNumber value={kcal} /> : '＋'}<small>{kcal > 0 ? ' kcal' : ''}</small></span>
         <span className="k">food today</span>
       </Link>
     </div>
@@ -109,21 +132,7 @@ export default function Home() {
         <div className="card">
           <div className="row" style={{ gap: 14 }}>
             <div style={{ position: 'relative', width: 74, height: 74, flexShrink: 0 }}>
-              <svg viewBox="0 0 80 80" width={74} height={74} style={{ filter: `drop-shadow(0 0 10px ${ring(status.readiness.score)}44)` }}>
-                <defs>
-                  <linearGradient id="ringGrad" x1="0" y1="0" x2="1" y2="1">
-                    <stop offset="0%" stopColor={ring(status.readiness.score)} />
-                    <stop offset="100%" stopColor="var(--run)" />
-                  </linearGradient>
-                </defs>
-                <circle cx={40} cy={40} r={34} fill="none" stroke="var(--surface-3)" strokeWidth={7} />
-                <circle
-                  cx={40} cy={40} r={34} fill="none" stroke="url(#ringGrad)" strokeWidth={7}
-                  strokeLinecap="round" strokeDasharray={`${(status.readiness.score / 100) * 213.6} 213.6`}
-                  transform="rotate(-90 40 40)"
-                />
-                <text x={40} y={47} textAnchor="middle" fontSize={21} fontWeight={700} fill="var(--text)" fontFamily="Space Grotesk, Inter, sans-serif">{status.readiness.score}</text>
-              </svg>
+              <ReadinessRing score={status.readiness.score} />
             </div>
             <div className="grow">
               <div className="card-title" style={{ marginBottom: 2 }}>Readiness</div>
@@ -173,7 +182,7 @@ export default function Home() {
       {/* stats row */}
       <div className="grid-3">
         <div className="card pad-sm stat">
-          <span className="v">{status?.streak ?? 0}<small>d</small></span>
+          <span className="v"><AnimatedNumber value={status?.streak ?? 0} /><small>d</small></span>
           <span className="k">streak</span>
         </div>
         <div className="card pad-sm stat">

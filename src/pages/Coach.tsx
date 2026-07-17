@@ -7,6 +7,7 @@ import { weeklyVolumes, type WeekVolume } from '../lib/stats';
 import { computeDayStatus, type DayStatus } from '../lib/readiness';
 import MobilityPlayer from '../components/MobilityPlayer';
 import ExerciseAnim from '../components/ExerciseAnim';
+import AnimatedNumber from '../components/AnimatedNumber';
 
 export default function Coach() {
   const nav = useNavigate();
@@ -256,19 +257,19 @@ function WeeklyReview() {
     <div className="card">
       <div className="card-title">Your week in review</div>
       <div className="grid-3">
-        <div className="stat"><span className="v">{strengthN}</span><span className="k">sessions</span></div>
-        <div className="stat"><span className="v">{totalSets}</span><span className="k">sets</span></div>
-        <div className="stat"><span className="v">{km}<small>km</small></span><span className="k">running</span></div>
+        <div className="stat"><span className="v"><AnimatedNumber value={strengthN} /></span><span className="k">sessions</span></div>
+        <div className="stat"><span className="v"><AnimatedNumber value={totalSets} /></span><span className="k">sets</span></div>
+        <div className="stat"><span className="v"><AnimatedNumber value={km} decimals={km % 1 ? 1 : 0} /><small>km</small></span><span className="k">running</span></div>
       </div>
       <div className="divider" />
       <div className="grid-3">
         <div className="stat">
-          <span className="v" style={{ color: gluteSets >= 10 ? 'var(--accent)' : undefined }}>{gluteSets}<small>/10–20</small></span>
+          <span className="v" style={{ color: gluteSets >= 10 ? 'var(--accent)' : undefined }}><AnimatedNumber value={gluteSets} /><small>/10–20</small></span>
           <span className="k">glute sets</span>
         </div>
-        <div className="stat"><span className="v">{habitPct != null ? `${habitPct}%` : '—'}</span><span className="k">habits</span></div>
+        <div className="stat"><span className="v">{habitPct != null ? <><AnimatedNumber value={habitPct} />%</> : '—'}</span><span className="k">habits</span></div>
         <div className="stat">
-          <span className="v">{kcalAvg ?? '—'}{kcalAvg && profile?.calorieTarget ? <small>/{profile.calorieTarget}</small> : null}</span>
+          <span className="v">{kcalAvg != null ? <AnimatedNumber value={kcalAvg} /> : '—'}{kcalAvg && profile?.calorieTarget ? <small>/{profile.calorieTarget}</small> : null}</span>
           <span className="k">kcal avg</span>
         </div>
       </div>

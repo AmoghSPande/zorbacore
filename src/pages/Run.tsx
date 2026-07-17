@@ -8,6 +8,7 @@ import {
   RUN_TYPE_LABEL, type RunStats,
 } from '../lib/running';
 import { Scale10, Stepper } from '../components/inputs';
+import EmptyState from '../components/EmptyState';
 
 export default function RunPage() {
   const [stats, setStats] = useState<RunStats | null>(null);
@@ -105,6 +106,14 @@ export default function RunPage() {
             Ramp rule: raise weekly distance by max ~10% — your knee sets the ceiling, not your lungs.
           </div>
         </div>
+      )}
+
+      {runs.length === 0 && (
+        <EmptyState
+          anim="run-gait"
+          title="No runs yet"
+          note="Your first one starts the story — even 10 easy minutes counts. The knee check before each run keeps it safe."
+        />
       )}
 
       {runs.length > 0 && (
