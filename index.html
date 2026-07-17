@@ -5,6 +5,32 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no" />
     <meta name="theme-color" content="#0b0f14" />
     <meta name="robots" content="noindex, nofollow" />
+    <!--
+      Content Security Policy. Everything is self-hosted except Firebase Auth/
+      Firestore and the optional user-supplied Anthropic key call, so scripts are
+      locked to 'self' (the built bundle has no inline scripts). This is the main
+      wall against XSS: even if malicious text reached the DOM, it cannot load or
+      run outside code, exfiltrate to an arbitrary host, or reframe the page.
+    -->
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="
+        default-src 'self';
+        script-src 'self' https://apis.google.com;
+        style-src 'self' 'unsafe-inline';
+        img-src 'self' data: https://*.googleusercontent.com;
+        font-src 'self';
+        connect-src 'self' https://identitytoolkit.googleapis.com https://securetoken.googleapis.com https://firestore.googleapis.com https://www.googleapis.com https://api.anthropic.com;
+        frame-src 'self' https://hcfirebase-85059.firebaseapp.com https://apis.google.com https://accounts.google.com;
+        worker-src 'self';
+        manifest-src 'self';
+        object-src 'none';
+        base-uri 'none';
+        form-action 'none';
+        upgrade-insecure-requests;
+      "
+    />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <link rel="icon" href="/icon.svg" type="image/svg+xml" />

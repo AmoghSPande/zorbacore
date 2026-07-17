@@ -23,20 +23,38 @@ In **Firestore → Rules**, replace everything with this and **Publish**:
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    match /users/{uid}/{document=**} {
-      allow read, write: if request.auth != null && request.auth.uid == uid;
+
+    // Every user can read/write ONLY the data under their own account id.
+    // A verified-email check keeps unverified/spoofed identities out, and the
+    // 1 MiB per-document limit stops a compromised client from ballooning a
+    // synced doc to exhaust the project's free quota (a denial-of-wallet).
+    match /users/{uid}/snapshot/{table} {
+      allow read: if request.auth != null
+                  && request.auth.uid == uid;
+      allow write: if request.auth != null
+                   && request.auth.uid == uid
+                   && request.auth.token.email_verified == true
+                   && request.resource.size() < 1024 * 1024;
+    }
+
+    // Everything else is denied by default — nothing outside a user's own
+    // snapshot subcollection is readable or writable by anyone.
+    match /{document=**} {
+      allow read, write: if false;
     }
   }
 }
 ```
 
 This is the privacy guarantee: every user can only ever read and write the data
-under their own account id. There is no way to query another user's diary.
+under their own account id, and only with a verified Google email. There is no
+way to query — or even see the existence of — another user's diary.
 
-*(Optional, stricter: to allow only specific people, add an `allowlist` collection
-with one doc per allowed email and change the condition to
-`request.auth.uid == uid && exists(/databases/$(database)/documents/allowlist/$(request.auth.token.email))`.
-Then only listed emails can sync at all.)*
+*(Optional, stricter still — allow only specific people: create an `allowlist`
+collection with one document whose ID is each permitted email, then add
+`&& exists(/databases/$(database)/documents/allowlist/$(request.auth.token.email))`
+to the `write` (and `read`) conditions. Now only invited family members can sync
+at all, even though anyone can sign in with Google.)*
 
 ## 3. Connect the app
 

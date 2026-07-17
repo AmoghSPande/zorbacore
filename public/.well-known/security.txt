@@ -1,0 +1,5 @@
+# Zorbacore responsible-disclosure contact (RFC 9116)
+Contact: mailto:amoghspande@gmail.com
+Preferred-Languages: en
+Canonical: https://zorbacore.com/.well-known/security.txt
+Expires: 2027-01-01T00:00:00.000Z
