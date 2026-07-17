@@ -487,6 +487,7 @@ label.field .lbl { display: block; font-size: 0.76rem; font-weight: 650; color: 
   pointer-events: none;
 }
 .hero-scene { animation: heroin 0.55s cubic-bezier(0.16, 1, 0.3, 1); }
+.fight-anim { height: 100%; width: auto; display: block; }
 .hero-caption {
   animation: heroin 0.55s cubic-bezier(0.16, 1, 0.3, 1);
   font-size: 0.88rem;

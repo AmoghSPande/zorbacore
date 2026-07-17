@@ -16,9 +16,9 @@ export type PropDef =
   | { kind: 'db'; at: string } // dumbbell at a joint
   | { kind: 'kb'; at: string } // club/mudgal head at a joint
   | { kind: 'cable'; from: Pt; to: string }
-  | { kind: 'line'; from: string | Pt; to: string | Pt; w?: number }
+  | { kind: 'line'; from: string | Pt; to: string | Pt; w?: number; tone?: 'danger' }
   | { kind: 'ellipse'; cx: number; cy: number; rx: number; ry: number }
-  | { kind: 'circle'; at: string | Pt; r: number };
+  | { kind: 'circle'; at: string | Pt; r: number; tone?: 'danger'; fill?: boolean; bg?: boolean };
 
 /** Tiny cartoon face drawn inside the head circle (landing-page hero scenes). */
 export interface FaceDef {

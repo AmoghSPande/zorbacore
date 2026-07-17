@@ -32,15 +32,15 @@ function StepHead({ n, title, sub }: { n: number; title: React.ReactNode; sub?: 
   );
 }
 
-/** Zorby's journey — a looping seven-beat story told by the app's stick figures. */
+/** Zorby's rivalry — a looping seven-beat MMA story told by the app's stick figures. */
 const HERO_SCENES = [
-  { anim: 'hero-dream', line: 'This is Zorby. Zorby has a dream.' },
-  { anim: 'hero-bench', line: 'So the grind begins.' },
-  { anim: 'hero-run', line: 'Some days you fly…' },
-  { anim: 'hero-box', line: '…some days you fight back.' },
-  { anim: 'hero-yoga', line: 'Breathe. Recover. Repeat.' },
-  { anim: 'hero-climb', line: 'Keep going long enough…' },
-  { anim: 'hero-summit', line: '…and the view changes. Your turn.' },
+  { anim: 'fight-1', line: 'This is Zorby. That is The Slump.' },
+  { anim: 'hero-bench', line: 'So Zorby trains.' },
+  { anim: 'hero-run', line: 'Roadwork. Every fighter does it.' },
+  { anim: 'hero-box', line: 'Bag work. Hands of thunder.' },
+  { anim: 'hero-yoga', line: 'Even fighters need zen.' },
+  { anim: 'fight-3', line: 'Every day you show up, Zorby hits harder…' },
+  { anim: 'hero-victory', line: '…and The Slump gets smaller. Your turn.' },
 ];
 
 function HeroCycler() {

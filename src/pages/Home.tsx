@@ -6,8 +6,10 @@ import type { Profile } from '../types';
 import { computeDayStatus, type DayStatus } from '../lib/readiness';
 import { computeRunStats, fmtTime, type RunStats } from '../lib/running';
 import DailyCheckin from '../components/DailyCheckin';
+import ExerciseAnim from '../components/ExerciseAnim';
 import { Sparkline, VIZ } from '../components/charts';
 import AnimatedNumber, { useCountUp } from '../components/AnimatedNumber';
+import { fightState } from '../lib/fight';
 import { dueNudge } from '../lib/notify';
 
 function ring(score: number): string {
@@ -56,6 +58,40 @@ function HabitsFoodTiles() {
         <span className="v">{kcal > 0 ? <AnimatedNumber value={kcal} /> : '＋'}<small>{kcal > 0 ? ' kcal' : ''}</small></span>
         <span className="k">food today</span>
       </Link>
+    </div>
+  );
+}
+
+/** Zorby's ongoing bout with The Slump — powered by the user's streak. */
+function FightCard({ streak }: { streak: number }) {
+  const f = fightState(streak);
+  const toNext = f.nextAt != null
+    ? Math.min(1, (streak - f.tierStart) / (f.nextAt - f.tierStart))
+    : 1;
+  return (
+    <div className="card pad-sm">
+      <div className="row-between">
+        <div className="card-title" style={{ margin: 0 }}>🥊 Zorby vs The Slump</div>
+        <span className="badge info">{streak}-day streak</span>
+      </div>
+      <div key={f.anim} className="hero-scene" style={{ height: 120, margin: '2px 0', display: 'flex', justifyContent: 'center' }}>
+        <ExerciseAnim animId={f.anim} className="fight-anim" />
+      </div>
+      <div className="tag-note">{f.line}</div>
+      {f.nextAt != null ? (
+        <>
+          <div className="progressbar" style={{ marginTop: 8 }}>
+            <div style={{ width: `${Math.round(toNext * 100)}%` }} />
+          </div>
+          <div className="tag-note" style={{ marginTop: 4, fontSize: '0.74rem' }}>
+            {f.nextAt - streak} more day{f.nextAt - streak > 1 ? 's' : ''} of showing up → Zorby's next power-up
+          </div>
+        </>
+      ) : (
+        <div className="tag-note" style={{ marginTop: 6, color: 'var(--accent)' }}>
+          Max power — every day you show up keeps The Slump this small.
+        </div>
+      )}
     </div>
   );
 }
@@ -175,6 +211,9 @@ export default function Home() {
           </div>
         </div>
       )}
+
+      {/* Zorby's fight — streak-powered */}
+      {status && <FightCard streak={status.streak} />}
 
       {/* habits + food quick tiles */}
       <HabitsFoodTiles />
