@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { updateProfile } from '../db';
 import type { TrainingStyle } from '../types';
 import { STYLES } from '../lib/coach';
@@ -28,6 +28,34 @@ function StepHead({ n, title, sub }: { n: number; title: React.ReactNode; sub?: 
       </div>
       <h1 style={{ fontSize: 'clamp(1.7rem, 7vw, 2.1rem)', lineHeight: 1.12, letterSpacing: '-0.025em' }}>{title}</h1>
       {sub && <p style={{ marginTop: 10, color: 'var(--text-dim)', fontSize: '0.92rem', maxWidth: 340 }}>{sub}</p>}
+    </div>
+  );
+}
+
+/** Rotating cast of aspirational stick figures — the app's signature, front and center. */
+const HERO_SCENES = [
+  { anim: 'hero-bench', line: 'Today the bar. Tomorrow the world.' },
+  { anim: 'hero-climb', line: 'Training now. Summits later.' },
+  { anim: 'hero-yoga', line: 'Find your balance. Mostly.' },
+  { anim: 'hero-box', line: 'Float like a butterfly.' },
+  { anim: 'run-gait', line: 'Couch → 5K → unstoppable.' },
+];
+
+function HeroCycler() {
+  const [i, setI] = useState(0);
+  useEffect(() => {
+    const iv = setInterval(() => setI((x) => (x + 1) % HERO_SCENES.length), 3600);
+    return () => clearInterval(iv);
+  }, []);
+  const scene = HERO_SCENES[i];
+  return (
+    <div style={{ textAlign: 'center' }}>
+      <div className="hero-stage">
+        <div key={scene.anim} className="hero-scene">
+          <ExerciseAnim animId={scene.anim} />
+        </div>
+      </div>
+      <div key={scene.line} className="hero-caption">{scene.line}</div>
     </div>
   );
 }
@@ -96,9 +124,10 @@ export default function Onboarding() {
     }
   };
 
+  // progress dots for steps 1–5 only — the welcome screen stays clean
   const Dots = () => (
     <div className="row" style={{ justifyContent: 'center', gap: 6, marginTop: 4 }}>
-      {Array.from({ length: TOTAL }, (_, i) => (
+      {Array.from({ length: TOTAL - 1 }, (_, i) => i + 1).map((i) => (
         <span key={i} style={{
           width: i === step ? 20 : 7, height: 7, borderRadius: 99, transition: 'all .2s',
           background: i <= step ? 'var(--accent)' : 'var(--surface-3)',
@@ -135,12 +164,8 @@ export default function Onboarding() {
         <div aria-hidden style={{ position: 'fixed', inset: 0, zIndex: -1, background: 'radial-gradient(120% 65% at 50% 0%, #0c1320 0%, #070b11 55%, #04060a 100%)' }} />
         {step === 0 && (
           <>
-            <div aria-hidden style={{ position: 'fixed', right: '-24%', bottom: '4%', width: '95%', opacity: 0.07, zIndex: -1, pointerEvents: 'none' }}>
-              <ExerciseAnim animId="run-gait" />
-            </div>
-
             {/* wordmark */}
-            <div className="row" style={{ justifyContent: 'center', gap: 10, marginTop: '4dvh' }}>
+            <div className="row" style={{ justifyContent: 'center', gap: 10, marginTop: '3dvh' }}>
               <img src="/icon.svg" alt="" width={30} height={30} style={{ borderRadius: 9 }} />
               <span style={{
                 fontFamily: 'var(--font-display)', fontWeight: 700, fontSize: '0.95rem',
@@ -150,9 +175,15 @@ export default function Onboarding() {
               </span>
             </div>
 
-            {/* hero */}
-            <div style={{ marginTop: '9dvh' }}>
-              <h1 style={{ fontSize: 'clamp(2.1rem, 9vw, 2.7rem)', lineHeight: 1.08, letterSpacing: '-0.03em' }}>
+            {/* living hero — cycling aspirational figures; auto margins center the
+                hero+headline group in the space between wordmark and actions */}
+            <div style={{ marginTop: 'auto', paddingTop: '2dvh' }}>
+              <HeroCycler />
+            </div>
+
+            {/* headline */}
+            <div style={{ marginTop: '2dvh', textAlign: 'center' }}>
+              <h1 style={{ fontSize: 'clamp(2rem, 8.5vw, 2.6rem)', lineHeight: 1.08, letterSpacing: '-0.03em' }}>
                 Train for the
                 <br />
                 <span style={{
@@ -162,25 +193,19 @@ export default function Onboarding() {
                   body you want.
                 </span>
               </h1>
-              <p style={{ marginTop: 14, color: 'var(--text-dim)', fontSize: '0.95rem', maxWidth: 320 }}>
-                A coach that adapts every session to your joints, your goals,
-                your time — and celebrates every record with you.
+              <p style={{ margin: '12px auto 0', color: 'var(--text-dim)', fontSize: '0.94rem', maxWidth: 320 }}>
+                A coach that adapts every session to your body, your goals, your time.
               </p>
-              <div className="row" style={{ marginTop: 18, gap: 6, flexWrap: 'wrap' }}>
-                {['Strength', 'Running', 'Yoga', 'Habits', 'Nutrition'].map((t) => (
-                  <span key={t} style={{
-                    fontSize: '0.72rem', fontWeight: 650, letterSpacing: '0.05em',
-                    color: 'var(--text-faint)', border: '1px solid var(--border)',
-                    borderRadius: 999, padding: '5px 11px',
-                  }}>
-                    {t}
-                  </span>
-                ))}
+              <div style={{
+                marginTop: 12, fontSize: '0.74rem', fontWeight: 650, letterSpacing: '0.08em',
+                color: 'var(--text-faint)', textTransform: 'uppercase',
+              }}>
+                Strength · Running · Yoga · Habits · Nutrition
               </div>
             </div>
 
             {/* actions */}
-            <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 10, paddingTop: 24 }}>
+            <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 8, paddingTop: 20 }}>
               {cloud.user && (
                 <div className="card pad-sm" style={{ textAlign: 'center', borderColor: 'color-mix(in srgb, var(--accent) 45%, transparent)' }}>
                   Signed in as <b>{cloud.user.email}</b> — your space follows you on any device.
@@ -189,17 +214,17 @@ export default function Onboarding() {
               <button className="btn primary big" onClick={() => setStep(1)}>Set up my space</button>
               {cloudEnabled && !cloud.user && (
                 <button
-                  className="btn big"
-                  style={{ background: 'var(--surface-2)', gap: 10 }}
+                  className="btn ghost"
+                  style={{ gap: 8, fontSize: '0.88rem' }}
                   disabled={!cloud.ready}
                   onClick={async () => { setSignErr(null); try { await signInGoogle(); } catch (e) { setSignErr((e as Error).message); } }}
                 >
-                  <GoogleG /> Continue with Google
+                  <GoogleG /> Already have a space? Continue with Google
                 </button>
               )}
               {signErr && <div className="tag-note" style={{ color: 'var(--danger)', textAlign: 'center' }}>{signErr}</div>}
               <div className="tag-note" style={{ textAlign: 'center', fontSize: '0.76rem', color: 'var(--text-faint)' }}>
-                Private by design — sign in to sync across devices, or use it on this device only.
+                🔒 Private by design — your data stays yours.
               </div>
             </div>
           </>
@@ -323,7 +348,7 @@ export default function Onboarding() {
           </>
         )}
 
-        <Dots />
+        {step > 0 && <Dots />}
       </div>
     </div>
   );
