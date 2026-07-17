@@ -1427,6 +1427,7 @@ export const ANIMS: Record<string, AnimDef> = {
       { kind: 'plate', at: 'bar', r: 16 },
     ],
     duration: 1900,
+    face: { view: 'up', mood: 'grr' },
   },
 
   // Scrambling up a mountain face toward a summit flag.
@@ -1452,6 +1453,7 @@ export const ANIMS: Record<string, AnimDef> = {
       { kind: 'line', from: [118, 9], to: [134, 14], w: 6 },
     ],
     duration: 1700,
+    face: { view: 'right', mood: 'grr' },
   },
 
   // Tree pose, arms joined overhead, gentle breath.
@@ -1473,6 +1475,7 @@ export const ANIMS: Record<string, AnimDef> = {
       },
     ],
     duration: 2600,
+    face: { view: 'front', mood: 'zen' },
   },
 
   // Jabbing a hanging bag that recoils on the hit.
@@ -1502,5 +1505,60 @@ export const ANIMS: Record<string, AnimDef> = {
       { kind: 'circle', at: 'wristL', r: 4.5 },
     ],
     duration: 1000,
+    face: { view: 'right', mood: 'grr' },
+  },
+
+  // Story opener: Zorby stands and dreams of the summit (thought bubble).
+  'hero-dream': {
+    frames: [
+      { ...STAND, elbowR: [99, 52], wristR: [100, 66] },
+      {
+        head: [103, 23], shoulder: [98, 36], hip: [98, 64],
+        kneeR: [100, 89], ankleR: [100, 114], toeR: [111, 117],
+        elbowR: [99, 51], wristR: [100, 65],
+      },
+    ],
+    props: [
+      { kind: 'circle', at: [113, 15], r: 2 },
+      { kind: 'circle', at: [121, 9], r: 3 },
+      { kind: 'ellipse', cx: 146, cy: 17, rx: 21, ry: 13 },
+      { kind: 'line', from: [135, 24], to: [146, 10], w: 2 },
+      { kind: 'line', from: [146, 10], to: [157, 24], w: 2 },
+      { kind: 'line', from: [146, 10], to: [146, 5], w: 1.5 },
+      { kind: 'line', from: [146, 6], to: [151, 7.5], w: 3 },
+    ],
+    duration: 2400,
+    face: { view: 'right', mood: 'grr' },
+  },
+
+  // Story finale: on top of the mountain, flag planted, arms in a V.
+  'hero-summit': {
+    frames: [
+      {
+        head: [100, 8], shoulder: [100, 22], hip: [100, 52],
+        kneeR: [108, 73], ankleR: [106, 94], kneeL: [92, 73], ankleL: [94, 94],
+        elbowR: [113, 12], wristR: [121, 0],
+        elbowL: [87, 12], wristL: [79, 0],
+      },
+      {
+        head: [100, 10], shoulder: [100, 24], hip: [100, 54],
+        kneeR: [108, 75], ankleR: [106, 96], kneeL: [92, 75], ankleL: [94, 96],
+        elbowR: [114, 16], wristR: [124, 6],
+        elbowL: [86, 16], wristL: [76, 6],
+      },
+    ],
+    props: [
+      { kind: 'line', from: [16, 140], to: [100, 98], w: 3 },
+      { kind: 'line', from: [100, 98], to: [184, 140], w: 3 },
+      { kind: 'line', from: [122, 109], to: [122, 82], w: 2 },
+      { kind: 'line', from: [122, 84], to: [136, 89], w: 6 },
+      { kind: 'circle', at: [26, 18], r: 8 },
+    ],
+    duration: 1400,
+    noFloor: true,
+    face: { view: 'front', mood: 'joy' },
   },
 };
+
+// The library's run-gait, with Zorby's determined game face for the landing story.
+ANIMS['hero-run'] = { ...ANIMS['run-gait'], face: { view: 'right', mood: 'grr' } };
