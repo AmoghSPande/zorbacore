@@ -6,6 +6,9 @@ const STROKE = '#e8edf2';
 const FAR = '#64748b';
 const PROP = '#3b82f6';
 const ACCENT = '#34d399';
+const DANGER = '#f87171'; // The Slump's color
+
+const toneColor = (tone?: 'danger') => (tone === 'danger' ? DANGER : PROP);
 
 function Limb({ pts, color, w = 4.5 }: { pts: (Pt | undefined)[]; color: string; w?: number }) {
   const valid = pts.filter(Boolean) as Pt[];
@@ -140,7 +143,7 @@ function Props({ def, pose }: { def: AnimDef; pose: Pose }) {
             const b = resolve(pose, pr.to);
             return (
               <line key={i} x1={a[0]} y1={a[1]} x2={b[0]} y2={b[1]}
-                stroke={PROP} strokeWidth={pr.w ?? 3.5} strokeLinecap="round" />
+                stroke={toneColor(pr.tone)} strokeWidth={pr.w ?? 3.5} strokeLinecap="round" />
             );
           }
           case 'ellipse':
@@ -150,7 +153,11 @@ function Props({ def, pose }: { def: AnimDef; pose: Pose }) {
             );
           case 'circle': {
             const at = resolve(pose, pr.at);
-            return <circle key={i} cx={at[0]} cy={at[1]} r={pr.r} fill="none" stroke={PROP} strokeWidth={3} />;
+            const c = toneColor(pr.tone);
+            if (pr.bg) return <circle key={i} cx={at[0]} cy={at[1]} r={pr.r} fill="#1c242f" stroke={c} strokeWidth={3} />;
+            return pr.fill
+              ? <circle key={i} cx={at[0]} cy={at[1]} r={pr.r} fill={c} />
+              : <circle key={i} cx={at[0]} cy={at[1]} r={pr.r} fill="none" stroke={c} strokeWidth={3} />;
           }
         }
       })}

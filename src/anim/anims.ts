@@ -1562,3 +1562,190 @@ export const ANIMS: Record<string, AnimDef> = {
 
 // The library's run-gait, with Zorby's determined game face for the landing story.
 ANIMS['hero-run'] = { ...ANIMS['run-gait'], face: { view: 'right', mood: 'grr' } };
+
+// ---------------- Zorby vs The Slump (streak-powered fight tiers) ----------------
+// The Slump is drawn from pose-anchored danger-toned props: a blob body with
+// horns, eyes, a mouth and one stubby arm. Each tier shrinks it and gives
+// Zorby a stronger move. Streak tiers: 0 / 1–3 / 4–6 / 7–13 / 14+.
+
+/** The Slump's standard prop set (r = body radius for the tier).
+ * Horn/arm lines run from the body center but the opaque body circle is
+ * drawn over them, so only the tips poke out — proper stubby horns. */
+function slumpProps(r: number): import('./engine').PropDef[] {
+  return [
+    { kind: 'line', from: 'mBody', to: 'mHornA', w: 3.5, tone: 'danger' },
+    { kind: 'line', from: 'mBody', to: 'mHornB', w: 3.5, tone: 'danger' },
+    { kind: 'line', from: 'mBody', to: 'mFistA', w: 4.5, tone: 'danger' },
+    { kind: 'circle', at: 'mFistA', r: 3.5, tone: 'danger', fill: true },
+    { kind: 'circle', at: 'mBody', r, tone: 'danger', bg: true },
+    { kind: 'circle', at: 'mEyeA', r: 1.4, tone: 'danger', fill: true },
+    { kind: 'circle', at: 'mEyeB', r: 1.4, tone: 'danger', fill: true },
+    { kind: 'line', from: 'mMouthA', to: 'mMouthB', w: 2, tone: 'danger' },
+  ];
+}
+
+ANIMS['fight-0'] = {
+  // Streak 0: The Slump towers — but Zorby is already getting back up.
+  frames: [
+    {
+      head: [58, 58], shoulder: [55, 70], hip: [52, 92],
+      kneeR: [70, 96], ankleR: [72, 114], toeR: [82, 117],
+      kneeL: [44, 114], ankleL: [30, 116],
+      elbowR: [66, 80], wristR: [66, 66], elbowL: [46, 82], wristL: [56, 70],
+      mBody: [150, 74], mHornA: [138, 50], mHornB: [162, 48],
+      mEyeA: [140, 68], mEyeB: [148, 65], mMouthA: [139, 78], mMouthB: [147, 76],
+      mFistA: [126, 84],
+    },
+    {
+      head: [60, 52], shoulder: [57, 64], hip: [54, 86],
+      kneeR: [70, 94], ankleR: [72, 114], toeR: [82, 117],
+      kneeL: [46, 110], ankleL: [32, 114],
+      elbowR: [68, 74], wristR: [68, 60], elbowL: [48, 76], wristL: [58, 64],
+      mBody: [150, 72], mHornA: [138, 48], mHornB: [162, 46],
+      mEyeA: [140, 66], mEyeB: [148, 63], mMouthA: [139, 76], mMouthB: [147, 74],
+      mFistA: [124, 82],
+    },
+  ],
+  props: [...slumpProps(20), { kind: 'circle', at: 'wristR', r: 3.5 }, { kind: 'circle', at: 'wristL', r: 3.5 }],
+  duration: 1600,
+  face: { view: 'right', mood: 'grr' },
+};
+
+ANIMS['fight-1'] = {
+  // Streak 1–3: on his feet, guard up, bouncing.
+  frames: [
+    {
+      head: [66, 36], shoulder: [62, 48], hip: [60, 74],
+      kneeR: [70, 94], ankleR: [68, 114], toeR: [79, 117],
+      kneeL: [50, 96], ankleL: [44, 114], toeL: [55, 117],
+      elbowR: [74, 58], wristR: [76, 46], elbowL: [56, 60], wristL: [68, 50],
+      mBody: [148, 78], mHornA: [136, 56], mHornB: [160, 54],
+      mEyeA: [139, 72], mEyeB: [147, 69], mMouthA: [137, 82], mMouthB: [145, 80],
+      mFistA: [124, 86],
+    },
+    {
+      head: [66, 34], shoulder: [62, 46], hip: [60, 72],
+      kneeR: [70, 93], ankleR: [68, 114], toeR: [79, 117],
+      kneeL: [50, 95], ankleL: [44, 114], toeL: [55, 117],
+      elbowR: [75, 56], wristR: [77, 44], elbowL: [57, 58], wristL: [69, 48],
+      mBody: [148, 74], mHornA: [136, 52], mHornB: [160, 50],
+      mEyeA: [139, 68], mEyeB: [147, 65], mMouthA: [137, 78], mMouthB: [145, 76],
+      mFistA: [122, 84],
+    },
+  ],
+  props: [...slumpProps(18), { kind: 'circle', at: 'wristR', r: 3.5 }, { kind: 'circle', at: 'wristL', r: 3.5 }],
+  duration: 1100,
+  face: { view: 'right', mood: 'grr' },
+};
+
+ANIMS['fight-2'] = {
+  // Streak 4–6: jabs are landing; The Slump recoils.
+  frames: [
+    {
+      head: [66, 36], shoulder: [62, 48], hip: [60, 74],
+      kneeR: [70, 94], ankleR: [68, 114], toeR: [79, 117],
+      kneeL: [50, 96], ankleL: [44, 114], toeL: [55, 117],
+      elbowR: [74, 58], wristR: [76, 46], elbowL: [56, 60], wristL: [68, 50],
+      mBody: [146, 82], mHornA: [135, 62], mHornB: [157, 60],
+      mEyeA: [138, 77], mEyeB: [145, 74], mMouthA: [136, 86], mMouthB: [143, 84],
+      mFistA: [124, 90],
+    },
+    {
+      head: [70, 36], shoulder: [66, 48], hip: [63, 74],
+      kneeR: [72, 94], ankleR: [68, 114], toeR: [79, 117],
+      kneeL: [52, 96], ankleL: [44, 114], toeL: [55, 117],
+      elbowR: [84, 50], wristR: [100, 48], elbowL: [58, 60], wristL: [70, 50],
+      mBody: [154, 80], mHornA: [143, 60], mHornB: [165, 58],
+      mEyeA: [146, 75], mEyeB: [153, 72], mMouthA: [144, 84], mMouthB: [151, 82],
+      mFistA: [132, 88],
+    },
+  ],
+  props: [...slumpProps(15), { kind: 'circle', at: 'wristR', r: 3.5 }, { kind: 'circle', at: 'wristL', r: 3.5 }],
+  duration: 1000,
+  face: { view: 'right', mood: 'grr' },
+};
+
+ANIMS['fight-3'] = {
+  // Streak 7–13: front kick; The Slump shrinks and shields itself.
+  frames: [
+    {
+      head: [70, 34], shoulder: [66, 46], hip: [64, 72],
+      kneeL: [56, 94], ankleL: [52, 114], toeL: [63, 117],
+      kneeR: [78, 64], ankleR: [74, 80],
+      elbowR: [78, 54], wristR: [82, 44], elbowL: [58, 56], wristL: [70, 48],
+      mBody: [146, 88], mHornA: [136, 70], mHornB: [156, 68],
+      mEyeA: [138, 84], mEyeB: [144, 81], mMouthA: [136, 92], mMouthB: [142, 90],
+      mFistA: [134, 74],
+    },
+    {
+      head: [72, 34], shoulder: [68, 46], hip: [66, 72],
+      kneeL: [56, 94], ankleL: [52, 114], toeL: [63, 117],
+      kneeR: [88, 60], ankleR: [106, 58], toeR: [114, 58],
+      elbowR: [80, 54], wristR: [84, 44], elbowL: [58, 56], wristL: [70, 48],
+      mBody: [154, 84], mHornA: [146, 66], mHornB: [166, 66],
+      mEyeA: [146, 80], mEyeB: [152, 77], mMouthA: [144, 88], mMouthB: [150, 86],
+      mFistA: [142, 70],
+    },
+  ],
+  props: [...slumpProps(12), { kind: 'circle', at: 'wristR', r: 3.5 }, { kind: 'circle', at: 'wristL', r: 3.5 }],
+  duration: 1100,
+  face: { view: 'right', mood: 'grr' },
+};
+
+ANIMS['fight-4'] = {
+  // Streak 14+: full power — The Slump can barely peek over its own fists.
+  frames: [
+    {
+      head: [66, 44], shoulder: [62, 56], hip: [60, 82],
+      kneeR: [72, 98], ankleR: [70, 114], toeR: [80, 117],
+      kneeL: [52, 100], ankleL: [46, 114], toeL: [56, 117],
+      elbowR: [72, 68], wristR: [70, 56], elbowL: [54, 68], wristL: [62, 58],
+      mBody: [148, 102], mHornA: [142, 90], mHornB: [156, 88],
+      mEyeA: [142, 98], mEyeB: [147, 96], mMouthA: [141, 106], mMouthB: [146, 104],
+      mFistA: [138, 108],
+    },
+    {
+      head: [68, 30], shoulder: [64, 42], hip: [62, 70],
+      kneeR: [72, 92], ankleR: [70, 114], toeR: [80, 117],
+      kneeL: [52, 96], ankleL: [46, 114], toeL: [56, 117],
+      elbowR: [80, 44], wristR: [84, 26], elbowL: [56, 54], wristL: [66, 46],
+      mBody: [150, 100], mHornA: [144, 88], mHornB: [158, 86],
+      mEyeA: [144, 96], mEyeB: [149, 94], mMouthA: [143, 104], mMouthB: [148, 102],
+      mFistA: [140, 106],
+    },
+  ],
+  props: [...slumpProps(9), { kind: 'circle', at: 'wristR', r: 3.5 }, { kind: 'circle', at: 'wristL', r: 3.5 }],
+  duration: 1300,
+  face: { view: 'right', mood: 'grr' },
+};
+
+ANIMS['hero-victory'] = {
+  // Belt overhead, The Slump flat on the canvas.
+  frames: [
+    {
+      head: [92, 20], shoulder: [92, 34], hip: [92, 64],
+      kneeR: [100, 86], ankleR: [98, 112], kneeL: [84, 86], ankleL: [86, 112],
+      elbowR: [106, 24], wristR: [114, 10], elbowL: [78, 24], wristL: [70, 10],
+      belt: [92, 8],
+      mBody: [156, 110], mHornA: [148, 102], mHornB: [163, 100],
+      mEyeA: [151, 107], mEyeB: [157, 105], mMouthA: [150, 114], mMouthB: [156, 113],
+      mFistA: [146, 116],
+    },
+    {
+      head: [92, 18], shoulder: [92, 32], hip: [92, 63],
+      kneeR: [100, 85], ankleR: [98, 112], kneeL: [84, 85], ankleL: [86, 112],
+      elbowR: [107, 21], wristR: [115, 6], elbowL: [77, 21], wristL: [69, 6],
+      belt: [92, 4],
+      mBody: [156, 110], mHornA: [148, 102], mHornB: [163, 100],
+      mEyeA: [151, 107], mEyeB: [157, 105], mMouthA: [150, 114], mMouthB: [156, 113],
+      mFistA: [146, 116],
+    },
+  ],
+  props: [
+    ...slumpProps(8),
+    { kind: 'line', from: 'wristL', to: 'wristR', w: 5 },
+    { kind: 'circle', at: 'belt', r: 5 },
+  ],
+  duration: 1400,
+  face: { view: 'front', mood: 'joy' },
+};
