@@ -6,6 +6,8 @@ import { requestNotifyPermission } from '../lib/notify';
 import { cloudEnabled, signInGoogle, signOutGoogle, syncNow, useCloud } from '../lib/cloud';
 import { Slider } from '../components/inputs';
 import BackLink from '../components/BackLink';
+import ProUpgrade from '../components/ProUpgrade';
+import { proActive } from '../lib/pro';
 
 function CloudCard() {
   const cloud = useCloud();
@@ -142,6 +144,12 @@ export default function Settings() {
       </div>
 
       <CloudCard />
+
+      {proActive() && (
+        <div className="card">
+          <ProUpgrade />
+        </div>
+      )}
 
       <div className="card">
         <div className="card-title">Profile & targets</div>

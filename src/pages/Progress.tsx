@@ -7,6 +7,9 @@ import { computeRunStats, type RunStats } from '../lib/running';
 import { LineChart, BarChart, VIZ, type Pt } from '../components/charts';
 import { Stepper } from '../components/inputs';
 import ExerciseAnim from '../components/ExerciseAnim';
+import PrintReport from '../components/PrintReport';
+import { ProModal } from '../components/ProUpgrade';
+import { proActive, useIsPro } from '../lib/pro';
 
 function shortDate(d: string): string {
   return d.slice(5).replace('-', '/');
@@ -28,6 +31,9 @@ function linearTrend(points: { day: number; v: number }[]): { slopePerDay: numbe
 
 export default function Progress() {
   const [showLog, setShowLog] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [showPro, setShowPro] = useState(false);
+  const isPro = useIsPro();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [vols, setVols] = useState<WeekVolume[]>([]);
   const [runStats, setRunStats] = useState<RunStats | null>(null);
@@ -109,7 +115,15 @@ export default function Progress() {
           <h1>Progress</h1>
           <div className="sub">Fat loss · strength · running · consistency</div>
         </div>
-        <button className="btn sm primary" onClick={() => setShowLog(true)}>+ Measure</button>
+        <div className="row" style={{ gap: 6 }}>
+          <button
+            className="btn sm"
+            onClick={() => (isPro ? setShowReport(true) : setShowPro(true))}
+          >
+            📄 Report{proActive() && !isPro ? ' ✨' : ''}
+          </button>
+          <button className="btn sm primary" onClick={() => setShowLog(true)}>+ Measure</button>
+        </div>
       </div>
 
       {/* fat-loss dashboard */}
@@ -239,6 +253,8 @@ export default function Progress() {
       </div>
 
       {showLog && <MeasureModal onClose={() => setShowLog(false)} last={metrics[metrics.length - 1]} />}
+      {showReport && <PrintReport onClose={() => setShowReport(false)} />}
+      {showPro && <ProModal onClose={() => setShowPro(false)} />}
     </div>
   );
 }

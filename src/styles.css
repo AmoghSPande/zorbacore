@@ -522,6 +522,15 @@ label.field .lbl { display: block; font-size: 0.76rem; font-weight: 650; color: 
   body { font-size: 15.5px; }
 }
 
+/* ---------- print: only the Pro report, nothing else ---------- */
+@media print {
+  body * { visibility: hidden; }
+  .print-report, .print-report * { visibility: visible; }
+  .print-report { position: absolute; inset: 0; overflow: visible; }
+  .print-report .no-print { display: none !important; }
+  .nav, .update-toast { display: none !important; }
+}
+
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
